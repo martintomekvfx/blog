@@ -1,0 +1,31 @@
+---
+title: "Interactive Code Demo"
+description: "A post with a live JavaScript playground — only possible with MDX."
+pubDate: 2026-02-14
+tags: ["mdx", "web", "tutorial"]
+---
+
+import CodePlayground from '../../components/CodePlayground.jsx'
+
+# Interactive code in MDX
+
+Posts written as `.mdx` files can import and use React components directly. This post demonstrates the CodePlayground component.
+
+## Try it
+
+Edit the code below and hit **Run**:
+
+<CodePlayground client:load code={`const greet = (name) => \`Hello, \${name}!\`;\n\nconsole.log(greet("World"));\nconsole.log(greet("Astro"));\nconsole.log(greet("MDX"));`} language="javascript" />
+
+## Array manipulation
+
+<CodePlayground client:load code={`const numbers = [1, 2, 3, 4, 5];\n\nconst doubled = numbers.map(n => n * 2);\nconsole.log("Doubled:", doubled.join(", "));\n\nconst sum = numbers.reduce((a, b) => a + b, 0);\nconsole.log("Sum:", sum);`} language="javascript" />
+
+## How it works
+
+Regular posts created through Pages CMS are `.md` files — standard markdown. For posts that need interactive components, create an `.mdx` file manually or via the CLI:
+
+```bash
+python cli/blog.py new "My Interactive Post"
+# then rename the file from .md to .mdx
+```
