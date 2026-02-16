@@ -9,17 +9,17 @@ const filtered = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 
 {filtered.length > 0 && (
   <nav
-    class="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
+    class="mb-8 border border-white p-4"
     aria-label="Table of contents"
   >
-    <p class="text-sm font-semibold text-neutral-100 mb-2">Contents</p>
+    <p class="text-sm font-medium uppercase mb-2">Contents</p>
     <ul class="space-y-1">
       {filtered.map((heading) => (
         <li>
           <a
             href={`#${heading.slug}`}
             class:list={[
-              "block text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors duration-150",
+              "block text-sm opacity-60 hover:opacity-100 hover:underline hover:underline-offset-4",
               heading.depth === 3 && "pl-4",
             ]}
           >

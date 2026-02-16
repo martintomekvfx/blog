@@ -14,23 +14,23 @@ const posts = allPosts.sort(
 
 <BaseLayout title="Blog" description="A tech & art blog">
   <section>
-    <h1 class="text-3xl font-bold text-balance text-neutral-100 mb-1">Blog</h1>
-    <p class="text-[var(--color-text-secondary)] text-pretty mb-8">
+    <h1 class="text-3xl font-bold text-balance mb-1">Blog</h1>
+    <p class="opacity-60 text-pretty mb-8">
       Thoughts on tech, art, and everything in between.
     </p>
 
     {posts.length === 0 ? (
       <div class="text-center py-16">
-        <p class="text-[var(--color-text-secondary)] mb-4">No posts yet.</p>
+        <p class="opacity-60 mb-4">No posts yet.</p>
         <a
           href="https://github.com/martintomekvfx/blog"
-          class="text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] transition-colors duration-150"
+          class="text-sm underline underline-offset-4"
         >
           Create your first post
         </a>
       </div>
     ) : (
-      <div class="divide-y divide-[var(--color-border)]">
+      <div>
         {posts.map((post) => (
           <PostCard
             title={post.data.title}

@@ -31,14 +31,14 @@ const { tag, posts } = Astro.props;
 
 <BaseLayout title={`#${tag} | Blog`} description={`Posts tagged with "${tag}"`}>
   <section>
-    <h1 class="text-3xl font-bold text-balance text-neutral-100 mb-1">
+    <h1 class="text-3xl font-bold text-balance mb-1">
       #{tag}
     </h1>
-    <p class="text-[var(--color-text-secondary)] mb-8">
+    <p class="opacity-60 mb-8">
       {posts.length} {posts.length === 1 ? "post" : "posts"}
     </p>
 
-    <div class="divide-y divide-[var(--color-border)]">
+    <div>
       {posts.map((post: any) => (
         <PostCard
           title={post.data.title}
@@ -53,9 +53,9 @@ const { tag, posts } = Astro.props;
 
     <a
       href="/blog/tags/"
-      class="inline-block mt-8 text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] transition-colors duration-150"
+      class="inline-block mt-8 text-sm underline underline-offset-4"
     >
-      &larr; All tags
+      All tags
     </a>
   </section>
 </BaseLayout>

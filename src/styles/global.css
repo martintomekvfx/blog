@@ -1,18 +1,28 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@font-face {
+  font-family: "Neue Montreal";
+  src: url("/blog/fonts/NeueMontreal-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
-@theme {
-  --color-bg: #0a0a0a;
-  --color-bg-secondary: #141414;
-  --color-bg-tertiary: #1e1e1e;
-  --color-text: #e5e5e5;
-  --color-text-secondary: #a3a3a3;
-  --color-text-tertiary: #737373;
-  --color-border: #262626;
-  --color-accent: #3b82f6;
-  --color-accent-hover: #60a5fa;
+@font-face {
+  font-family: "Neue Montreal";
+  src: url("/blog/fonts/NeueMontreal-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Neue Montreal";
+  src: url("/blog/fonts/NeueMontreal-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 html {
@@ -21,73 +31,78 @@ html {
 }
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background-color: #000;
+  color: #fff;
+  font-family: "Neue Montreal", "Helvetica Neue", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {
-  background-color: var(--color-accent);
-  color: white;
+  background-color: #fff;
+  color: #000;
 }
 
-/* Prose overrides for dark theme */
+* {
+  border-radius: 0 !important;
+}
+
 .prose {
-  --tw-prose-body: var(--color-text);
-  --tw-prose-headings: #f5f5f5;
-  --tw-prose-links: var(--color-accent);
-  --tw-prose-bold: #f5f5f5;
-  --tw-prose-counters: var(--color-text-secondary);
-  --tw-prose-bullets: var(--color-text-tertiary);
-  --tw-prose-hr: var(--color-border);
-  --tw-prose-quotes: var(--color-text-secondary);
-  --tw-prose-quote-borders: var(--color-border);
-  --tw-prose-code: #f5f5f5;
-  --tw-prose-pre-code: var(--color-text);
-  --tw-prose-pre-bg: var(--color-bg-secondary);
-  --tw-prose-th-borders: var(--color-border);
-  --tw-prose-td-borders: var(--color-border);
+  --tw-prose-body: #fff;
+  --tw-prose-headings: #fff;
+  --tw-prose-links: #fff;
+  --tw-prose-bold: #fff;
+  --tw-prose-counters: #fff;
+  --tw-prose-bullets: #fff;
+  --tw-prose-hr: #fff;
+  --tw-prose-quotes: #fff;
+  --tw-prose-quote-borders: #fff;
+  --tw-prose-code: #fff;
+  --tw-prose-pre-code: #fff;
+  --tw-prose-pre-bg: #000;
+  --tw-prose-th-borders: #fff;
+  --tw-prose-td-borders: #fff;
 }
 
 .prose a {
-  text-decoration-color: var(--color-accent);
+  text-decoration: underline;
   text-underline-offset: 3px;
-  transition: color 150ms;
+  text-decoration-thickness: 1px;
 }
 
 .prose a:hover {
-  color: var(--color-accent-hover);
+  text-decoration-thickness: 2px;
 }
 
 .prose code:not(pre code) {
-  background-color: var(--color-bg-tertiary);
+  background-color: #fff;
+  color: #000;
   padding: 0.15em 0.4em;
-  border-radius: 0.25rem;
   font-size: 0.875em;
 }
 
 .prose pre {
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
+  border: 1px solid #fff;
 }
 
-/* Scrollbar */
+.prose blockquote {
+  border-left: 3px solid #fff;
+}
+
+.prose table th,
+.prose table td {
+  border: 1px solid #fff;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: #000;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-tertiary);
+  background: #fff;
 }

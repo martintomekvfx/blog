@@ -18,20 +18,20 @@ const sortedTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]);
 
 <BaseLayout title="Tags | Blog" description="Browse posts by tag">
   <section>
-    <h1 class="text-3xl font-bold text-balance text-neutral-100 mb-8">Tags</h1>
+    <h1 class="text-3xl font-bold text-balance mb-8">Tags</h1>
 
     {sortedTags.length === 0 ? (
-      <p class="text-[var(--color-text-secondary)]">No tags yet.</p>
+      <p class="opacity-60">No tags yet.</p>
     ) : (
       <ul class="flex flex-wrap gap-2" role="list">
         {sortedTags.map(([tag, count]) => (
           <li>
             <a
               href={`/blog/tags/${tag}/`}
-              class="inline-flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-colors duration-150"
+              class="inline-flex items-center gap-1.5 border border-white px-3 py-1.5 text-sm hover:bg-white hover:text-black transition-colors duration-100"
             >
               {tag}
-              <span class="text-xs text-[var(--color-text-tertiary)] tabular-nums">
+              <span class="text-xs opacity-60 tabular-nums">
                 {count}
               </span>
             </a>

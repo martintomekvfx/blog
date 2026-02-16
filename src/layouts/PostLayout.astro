@@ -32,13 +32,13 @@ const formattedUpdated = updatedDate?.toLocaleDateString("en-US", {
 <BaseLayout title={`${title} | Blog`} description={description} image={heroImage}>
   <article class="py-4">
     <header class="mb-8">
-      <h1 class="text-3xl sm:text-4xl font-bold text-balance text-neutral-100 mb-3">
+      <h1 class="text-3xl sm:text-4xl font-bold text-balance mb-3">
         {title}
       </h1>
-      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[var(--color-text-secondary)]">
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm opacity-60">
         <time datetime={pubDate.toISOString()}>{formattedDate}</time>
         {formattedUpdated && (
-          <span class="text-[var(--color-text-tertiary)]">
+          <span>
             (updated {formattedUpdated})
           </span>
         )}
@@ -54,7 +54,7 @@ const formattedUpdated = updatedDate?.toLocaleDateString("en-US", {
       <img
         src={heroImage}
         alt={title}
-        class="w-full rounded-lg mb-8 border border-[var(--color-border)]"
+        class="w-full mb-8 border border-white"
         loading="eager"
       />
     )}
