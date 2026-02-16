@@ -84,11 +84,17 @@ function slugify(text) {
 }
 
 function toBase64(str) {
-  return btoa(unescape(encodeURIComponent(str)));
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary);
 }
 
 function fromBase64(str) {
-  return decodeURIComponent(escape(atob(str)));
+  const cleaned = str.replace(/\n/g, "");
+  const binary = atob(cleaned);
+  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
 }
 
 // --- Token storage (sessionStorage default, localStorage opt-in) ---

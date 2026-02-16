@@ -8,7 +8,7 @@ draft: true
 
 # Welcome to my blog
 
-This is my first post. The blog is built with [Astro](https://astro.build), styled with [Tailwind CSS](https://tailwindcss.com), and supports MDX Ã¢ÂÂ meaning I can embed interactive components directly in my posts.
+This is my first post. The blog is built with [Astro](https://astro.build), styled with [Tailwind CSS](https://tailwindcss.com), and supports MDX -- meaning I can embed interactive components directly in my posts.
 
 ## The tech stack
 
