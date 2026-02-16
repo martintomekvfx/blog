@@ -1,0 +1,78 @@
+---
+title: "MDX Features Demo"
+description: "A showcase of MDX capabilities — code blocks, components, and more."
+pubDate: 2026-02-15
+tags: ["mdx", "web", "tutorial"]
+---
+
+import CodePlayground from '../../components/CodePlayground.jsx'
+
+# MDX features
+
+MDX lets you use JSX components inside markdown. This post demonstrates the key features available for writing posts on this blog.
+
+## Syntax-highlighted code blocks
+
+Standard fenced code blocks get automatic syntax highlighting via Shiki:
+
+```typescript
+interface Post {
+  title: string;
+  description: string;
+  pubDate: Date;
+  tags: string[];
+  draft: boolean;
+}
+
+function getPublishedPosts(posts: Post[]): Post[] {
+  return posts
+    .filter((p) => !p.draft)
+    .sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf());
+}
+```
+
+## Interactive code
+
+Unlike static code blocks, the CodePlayground component lets readers edit and run code:
+
+<CodePlayground client:load code={`// Try modifying this!\nconst numbers = [1, 2, 3, 4, 5];\n\nconst doubled = numbers.map(n => n * 2);\nconsole.log("Doubled:", doubled.join(", "));\n\nconst sum = numbers.reduce((a, b) => a + b, 0);\nconsole.log("Sum:", sum);`} language="javascript" />
+
+## Markdown features
+
+### Text formatting
+
+You can use **bold**, *italic*, ~~strikethrough~~, and `inline code`.
+
+### Lists
+
+1. First item
+2. Second item
+3. Third item
+
+- Unordered item
+- Another item
+
+### Blockquotes
+
+> The best way to predict the future is to invent it.
+> — Alan Kay
+
+### Tables
+
+| Feature | Supported |
+|---------|-----------|
+| MDX components | Yes |
+| Syntax highlighting | Yes |
+| Frontmatter | Yes |
+| Tags | Yes |
+| Draft mode | Yes |
+
+## Images
+
+Place images in the `public/images/` directory and reference them:
+
+```markdown
+![Alt text](/blog/images/my-image.png)
+```
+
+That's it — everything you need to write rich, interactive blog posts.

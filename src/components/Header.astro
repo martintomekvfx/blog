@@ -1,0 +1,50 @@
+---
+const navLinks = [
+  { href: "/blog/", label: "Home" },
+  { href: "/blog/about/", label: "About" },
+  { href: "/blog/tags/", label: "Tags" },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-bg)]/80 backdrop-blur-sm">
+  <nav class="max-w-3xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+    <a
+      href="/blog/"
+      class="text-lg font-bold text-neutral-100 hover:text-[var(--color-accent)] transition-colors duration-150"
+    >
+      blog
+    </a>
+    <ul class="flex items-center gap-6">
+      {navLinks.map(({ href, label }) => (
+        <li>
+          <a
+            href={href}
+            class:list={[
+              "text-sm transition-colors duration-150",
+              currentPath === href || (href !== "/blog/" && currentPath.startsWith(href))
+                ? "text-[var(--color-accent)]"
+                : "text-[var(--color-text-secondary)] hover:text-[var(--color-text)]",
+            ]}
+          >
+            {label}
+          </a>
+        </li>
+      ))}
+      <li>
+        <a
+          href="/blog/rss.xml"
+          class="text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors duration-150"
+          aria-label="RSS Feed"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 11a9 9 0 0 1 9 9" />
+            <path d="M4 4a16 16 0 0 1 16 16" />
+            <circle cx="5" cy="19" r="1" />
+          </svg>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</header>

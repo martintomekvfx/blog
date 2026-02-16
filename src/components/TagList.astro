@@ -1,0 +1,24 @@
+---
+interface Props {
+  tags: string[];
+  small?: boolean;
+}
+
+const { tags, small = false } = Astro.props;
+---
+
+<ul class="flex flex-wrap gap-1.5" role="list">
+  {tags.map((tag) => (
+    <li>
+      <a
+        href={`/blog/tags/${tag}/`}
+        class:list={[
+          "inline-block rounded-md border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-colors duration-150",
+          small ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-sm",
+        ]}
+      >
+        {tag}
+      </a>
+    </li>
+  ))}
+</ul>
