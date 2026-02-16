@@ -7,7 +7,7 @@ content:
     label: "Blog Posts"
     type: collection
     path: src/content/posts
-    format: mdx
+    format: md
     fields:
       - name: title
         label: Title

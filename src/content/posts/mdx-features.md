@@ -1,15 +1,13 @@
 ---
-title: "MDX Features Demo"
-description: "A showcase of MDX capabilities — code blocks, components, and more."
+title: "Markdown Features Demo"
+description: "A showcase of markdown capabilities — code blocks, tables, and more."
 pubDate: 2026-02-15
 tags: ["mdx", "web", "tutorial"]
 ---
 
-import CodePlayground from '../../components/CodePlayground.jsx'
+# Markdown features
 
-# MDX features
-
-MDX lets you use JSX components inside markdown. This post demonstrates the key features available for writing posts on this blog.
+This post demonstrates the key features available for writing posts on this blog.
 
 ## Syntax-highlighted code blocks
 
@@ -31,19 +29,24 @@ function getPublishedPosts(posts: Post[]): Post[] {
 }
 ```
 
-## Interactive code
+## More code examples
 
-Unlike static code blocks, the CodePlayground component lets readers edit and run code:
+```javascript
+// Array manipulation
+const numbers = [1, 2, 3, 4, 5];
 
-<CodePlayground client:load code={`// Try modifying this!\nconst numbers = [1, 2, 3, 4, 5];\n\nconst doubled = numbers.map(n => n * 2);\nconsole.log("Doubled:", doubled.join(", "));\n\nconst sum = numbers.reduce((a, b) => a + b, 0);\nconsole.log("Sum:", sum);`} language="javascript" />
+const doubled = numbers.map(n => n * 2);
+console.log("Doubled:", doubled.join(", "));
 
-## Markdown features
+const sum = numbers.reduce((a, b) => a + b, 0);
+console.log("Sum:", sum);
+```
 
-### Text formatting
+## Text formatting
 
 You can use **bold**, *italic*, ~~strikethrough~~, and `inline code`.
 
-### Lists
+## Lists
 
 1. First item
 2. Second item
@@ -52,12 +55,12 @@ You can use **bold**, *italic*, ~~strikethrough~~, and `inline code`.
 - Unordered item
 - Another item
 
-### Blockquotes
+## Blockquotes
 
 > The best way to predict the future is to invent it.
 > — Alan Kay
 
-### Tables
+## Tables
 
 | Feature | Supported |
 |---------|-----------|
@@ -75,4 +78,4 @@ Place images in the `public/images/` directory and reference them:
 ![Alt text](/blog/images/my-image.png)
 ```
 
-That's it — everything you need to write rich, interactive blog posts.
+That's it — everything you need to write rich blog posts.

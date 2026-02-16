@@ -5,8 +5,6 @@ pubDate: 2026-02-16
 tags: ["meta", "astro", "web"]
 ---
 
-import CodePlayground from '../../components/CodePlayground.jsx'
-
 # Welcome to my blog
 
 This is my first post. The blog is built with [Astro](https://astro.build), styled with [Tailwind CSS](https://tailwindcss.com), and supports MDX — meaning I can embed interactive components directly in my posts.
@@ -19,11 +17,15 @@ This is my first post. The blog is built with [Astro](https://astro.build), styl
 - **GitHub Pages** for hosting
 - **GitHub Actions** for automatic deployment
 
-## Interactive demo
+## Code demo
 
-Here's an interactive JavaScript playground. Try editing the code and hitting **Run**:
+```javascript
+const greet = (name) => `Hello, ${name}!`;
 
-<CodePlayground client:load code={`const greet = (name) => \`Hello, \${name}!\`;\n\nconsole.log(greet("World"));\nconsole.log(greet("Astro"));\nconsole.log(greet("MDX"));`} language="javascript" />
+console.log(greet("World"));
+console.log(greet("Astro"));
+console.log(greet("MDX"));
+```
 
 ## What's next
 
