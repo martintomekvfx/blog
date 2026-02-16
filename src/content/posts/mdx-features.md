@@ -1,8 +1,8 @@
 ---
 title: "Markdown Features Demo"
-description: "A showcase of markdown capabilities — code blocks, tables, and more."
-pubDate: 2026-02-15
-tags: ["mdx", "web", "tutorial"]
+description: "A showcase of markdown capabilities â code blocks, tables, and more."
+pubDate: "2026-02-16"
+tags: ["mdx","web","tutorial"]
 ---
 
 # Markdown features
@@ -58,7 +58,7 @@ You can use **bold**, *italic*, ~~strikethrough~~, and `inline code`.
 ## Blockquotes
 
 > The best way to predict the future is to invent it.
-> — Alan Kay
+> â Alan Kay
 
 ## Tables
 
@@ -78,4 +78,4 @@ Place images in the `public/images/` directory and reference them:
 ![Alt text](/blog/images/my-image.png)
 ```
 
-That's it — everything you need to write rich blog posts.
+That's it â everything you need to write rich blog posts.
