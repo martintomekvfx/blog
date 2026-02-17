@@ -1,15 +1,17 @@
 name: Tweet New Post
 
 # Runs after the deploy workflow completes successfully
+# Can also be triggered manually from GitHub Actions UI for testing
 on:
   workflow_run:
     workflows: ["Deploy to GitHub Pages"]
     types: [completed]
+  workflow_dispatch:
 
 jobs:
   tweet:
-    # Only run if deploy succeeded
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # Only run if deploy succeeded (skip check for manual runs)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Fetch newest post from Firestore and tweet
