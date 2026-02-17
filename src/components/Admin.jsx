@@ -171,12 +171,29 @@ research · game · analog · installation · palmovka
 - Summarizing at the end`;
 
 function GuidePanel({ onClose }) {
+  const [copied, setCopied] = useState(false);
+
+  function copyGuide() {
+    navigator.clipboard.writeText(GUIDE_CONTENT).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-end p-4 pointer-events-none">
       <div className="pointer-events-auto w-full max-w-sm bg-black border border-white/20 shadow-2xl flex flex-col" style={{ maxHeight: "calc(100vh - 2rem)" }}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
           <span className="text-[11px] uppercase tracking-[0.14em] opacity-60">Writing Guide</span>
-          <button onClick={onClose} className="text-xs opacity-40 hover:opacity-100">✕</button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={copyGuide}
+              className="text-[11px] uppercase tracking-[0.1em] border border-white/20 px-2 py-0.5 hover:border-white/60 transition-colors"
+            >
+              {copied ? "Copied ✓" : "Copy"}
+            </button>
+            <button onClick={onClose} className="text-xs opacity-40 hover:opacity-100">✕</button>
+          </div>
         </div>
         <div className="overflow-y-auto flex-1 p-4">
           <pre className="text-[12px] leading-relaxed opacity-70 whitespace-pre-wrap font-sans">{GUIDE_CONTENT}</pre>
@@ -393,21 +410,26 @@ function PostEditor({ post, onSave, onCancel }) {
         </div>
       ) : (
         <div
-          className="border border-white/15 p-6 prose prose-invert prose-sm max-w-none overflow-y-auto"
+          className="border border-white/15 overflow-y-auto bg-white text-black"
           style={{ minHeight: 480 }}
-          dangerouslySetInnerHTML={{
-            __html: body
-              .replace(/^#{1} (.+)$/gm, "<h1>$1</h1>")
-              .replace(/^#{2} (.+)$/gm, "<h2>$1</h2>")
-              .replace(/^#{3} (.+)$/gm, "<h3>$1</h3>")
-              .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-              .replace(/\*(.+?)\*/g, "<em>$1</em>")
-              .replace(/`(.+?)`/g, "<code>$1</code>")
-              .replace(/^- (.+)$/gm, "<li>$1</li>")
-              .replace(/\n\n/g, "</p><p>")
-              .replace(/^(?!<[hlu]|<li)(.+)$/gm, "<p>$1</p>"),
-          }}
-        />
+        >
+          <div
+            className="prose prose-sm max-w-none p-6"
+            dangerouslySetInnerHTML={{
+              __html: body
+                .replace(/^# (.+)$/gm, "<h1>$1</h1>")
+                .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+                .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+                .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+                .replace(/\*(.+?)\*/g, "<em>$1</em>")
+                .replace(/`([^`]+)`/g, "<code>$1</code>")
+                .replace(/^- (.+)$/gm, "<li>$1</li>")
+                .replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>")
+                .replace(/\n\n/g, "</p><p>")
+                .replace(/^(?!<[hpuol])(.+)$/gm, "<p>$1</p>"),
+            }}
+          />
+        </div>
       )}
 
       {error && (

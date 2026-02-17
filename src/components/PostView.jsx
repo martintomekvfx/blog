@@ -228,25 +228,6 @@ export default function PostView({ slug }) {
     };
   }, [slug]);
 
-  if (loading) {
-    return <p className="opacity-60">Loading...</p>;
-  }
-
-  if (notFound) {
-    return (
-      <div className="text-center py-16">
-        <h1 className="text-3xl font-bold uppercase mb-4">404</h1>
-        <p className="opacity-60 mb-8">Post not found.</p>
-        <a href="/blog/" className="text-sm underline underline-offset-4">
-          Back to home
-        </a>
-      </div>
-    );
-  }
-
-  const formattedDate = formatDate(post.pubDate);
-  const readingMinutes = getReadingTime(post.content);
-
   useEffect(() => {
     if (!bodyRef.current) return;
     const blocks = bodyRef.current.querySelectorAll("pre");
@@ -273,6 +254,25 @@ export default function PostView({ slug }) {
       }
     }
   }, [MdxContent]);
+
+  if (loading) {
+    return <p className="opacity-60">Loading...</p>;
+  }
+
+  if (notFound) {
+    return (
+      <div className="text-center py-16">
+        <h1 className="text-3xl font-bold uppercase mb-4">404</h1>
+        <p className="opacity-60 mb-8">Post not found.</p>
+        <a href="/blog/" className="text-sm underline underline-offset-4">
+          Back to home
+        </a>
+      </div>
+    );
+  }
+
+  const formattedDate = formatDate(post.pubDate);
+  const readingMinutes = getReadingTime(post.content);
 
   return (
     <motion.article
