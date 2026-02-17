@@ -116,17 +116,31 @@ jobs:
           print(f"Tweet ({len(tweet_text)} chars):\n{tweet_text}\n")
 
           api_key = os.environ.get("TWITTER_API_KEY", "")
-          if not api_key:
-              print("TWITTER_API_KEY not set — skipping tweet.")
+          api_secret = os.environ.get("TWITTER_API_SECRET", "")
+          access_token = os.environ.get("TWITTER_ACCESS_TOKEN", "")
+          access_secret = os.environ.get("TWITTER_ACCESS_SECRET", "")
+
+          def mask(s): return s[:4] + "..." + s[-4:] if len(s) > 8 else "NOT SET"
+          print(f"TWITTER_API_KEY:      {mask(api_key)}")
+          print(f"TWITTER_API_SECRET:   {mask(api_secret)}")
+          print(f"TWITTER_ACCESS_TOKEN: {mask(access_token)}")
+          print(f"TWITTER_ACCESS_SECRET:{mask(access_secret)}")
+
+          if not all([api_key, api_secret, access_token, access_secret]):
+              print("One or more Twitter secrets not set — skipping tweet.")
               exit(0)
 
           twitter = OAuth1Session(
               api_key,
-              client_secret=os.environ["TWITTER_API_SECRET"],
-              resource_owner_key=os.environ["TWITTER_ACCESS_TOKEN"],
-              resource_owner_secret=os.environ["TWITTER_ACCESS_SECRET"],
+              client_secret=api_secret,
+              resource_owner_key=access_token,
+              resource_owner_secret=access_secret,
           )
-          r = twitter.post("https://api.twitter.com/2/tweets", json={"text": tweet_text})
+          r = twitter.post(
+              "https://api.twitter.com/2/tweets",
+              json={"text": tweet_text},
+              headers={"Content-Type": "application/json"},
+          )
           print(f"Twitter response: {r.status_code}")
           print(r.json())
           if r.status_code == 401:
