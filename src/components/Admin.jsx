@@ -197,6 +197,7 @@ function PostEditor({ post, onSave, onCancel }) {
   const [error, setError] = useState("");
   const [showGuide, setShowGuide] = useState(false);
   const [editorMode, setEditorMode] = useState("write");
+  const [publishStatus, setPublishStatus] = useState("");
 
   function insertSquareTemplate() {
     setTitle("From Palmovka to Pixel Squares");
@@ -230,6 +231,34 @@ function PostEditor({ post, onSave, onCancel }) {
 
     try {
       await setDoc(doc(db, "posts", slug), data);
+
+      // If publishing (not a draft), trigger the tweet + newsletter workflow
+      if (!draft) {
+        const ghToken = localStorage.getItem("gh_dispatch_token");
+        if (ghToken) {
+          setPublishStatus("Triggering tweet + newsletter…");
+          try {
+            const r = await fetch(
+              "https://api.github.com/repos/martintomekvfx/blog/actions/workflows/tweet.yml/dispatches",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${ghToken}`,
+                  Accept: "application/vnd.github+json",
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ ref: "main" }),
+              }
+            );
+            setPublishStatus(r.ok ? "✓ Tweet + newsletter queued" : `GitHub API error: ${r.status}`);
+          } catch (dispatchErr) {
+            setPublishStatus(`Dispatch failed: ${dispatchErr.message}`);
+          }
+        } else {
+          setPublishStatus("No GH token — tweet not triggered (set it in Settings)");
+        }
+      }
+
       onSave();
     } catch (err) {
       setError(err.message);
@@ -497,6 +526,77 @@ function PostRow({ post, onRefresh, onEdit }) {
   );
 }
 
+function SettingsPanel({ onBack }) {
+  const [token, setToken] = useState(() => localStorage.getItem("gh_dispatch_token") || "");
+  const [saved, setSaved] = useState(false);
+
+  function save() {
+    if (token.trim()) {
+      localStorage.setItem("gh_dispatch_token", token.trim());
+    } else {
+      localStorage.removeItem("gh_dispatch_token");
+    }
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <div className="max-w-lg">
+      <div className="flex items-center gap-4 mb-8">
+        <button onClick={onBack} className="text-xs uppercase opacity-40 hover:opacity-100">← Back</button>
+        <h2 className="text-sm uppercase tracking-[0.1em] opacity-60">Settings</h2>
+      </div>
+
+      <div className="space-y-6">
+        <div>
+          <p className="text-xs uppercase tracking-[0.14em] opacity-60 mb-2">GitHub Dispatch Token</p>
+          <p className="text-xs opacity-40 mb-3 leading-relaxed">
+            A GitHub Personal Access Token with <code className="opacity-80">workflow</code> scope.
+            Used to trigger the tweet + newsletter workflow when you publish a post.
+            Stored in your browser only — never sent anywhere except GitHub API.
+          </p>
+          <p className="text-[11px] opacity-30 mb-3">
+            Create at: github.com → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+            → Repository: martintomekvfx/blog → Permissions: Actions (read + write)
+          </p>
+          <input
+            type="password"
+            value={token}
+            onChange={(e) => { setToken(e.target.value); setSaved(false); }}
+            placeholder="github_pat_..."
+            className="w-full bg-transparent border border-white/20 px-3 py-2 text-sm font-mono focus:outline-none focus:border-white/60 placeholder:opacity-20"
+          />
+          <button
+            onClick={save}
+            className="mt-3 border border-white px-4 py-1.5 text-xs uppercase font-medium bg-white text-black hover:bg-transparent hover:text-white transition-colors duration-100"
+          >
+            {saved ? "Saved ✓" : "Save"}
+          </button>
+          {token && (
+            <button
+              onClick={() => { setToken(""); localStorage.removeItem("gh_dispatch_token"); }}
+              className="mt-3 ml-3 text-xs uppercase opacity-40 hover:opacity-80"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        <div className="border-t border-white/10 pt-6">
+          <p className="text-xs uppercase tracking-[0.14em] opacity-60 mb-2">How publishing works</p>
+          <ol className="text-xs opacity-40 space-y-1.5 leading-relaxed list-decimal list-inside">
+            <li>Write post, toggle Draft off, click Publish</li>
+            <li>Post saved to Firebase instantly (live on site)</li>
+            <li>GitHub Actions workflow triggered via API</li>
+            <li>Workflow reads newest post from Firestore</li>
+            <li>Tweets it + sends Buttondown newsletter email</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Dashboard({ onLogout }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -552,6 +652,10 @@ function Dashboard({ onLogout }) {
     );
   }
 
+  if (view === "settings") {
+    return <SettingsPanel onBack={() => setView("list")} />;
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -562,6 +666,12 @@ function Dashboard({ onLogout }) {
             className="border border-white px-3 py-1.5 text-xs uppercase font-medium bg-white text-black hover:bg-black hover:text-white transition-colors duration-100"
           >
             New Post
+          </button>
+          <button
+            onClick={() => setView("settings")}
+            className="text-xs uppercase opacity-40 hover:opacity-100 transition-opacity"
+          >
+            Settings
           </button>
           <button
             onClick={onLogout}
