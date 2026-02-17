@@ -129,6 +129,16 @@ jobs:
           r = twitter.post("https://api.twitter.com/2/tweets", json={"text": tweet_text})
           print(f"Twitter response: {r.status_code}")
           print(r.json())
+          if r.status_code == 401:
+              print("401 Unauthorized — likely causes:")
+              print("  1. Access Token generated before enabling OAuth 1.0a Read+Write")
+              print("  2. OAuth 1.0a not enabled in User authentication settings")
+              print("  3. App permissions set to Read-only")
+              print("  Fix: developer.twitter.com -> App -> User authentication settings -> enable OAuth 1.0a + Read+Write -> Save -> regenerate Access Token")
+              exit(1)
+          elif not r.ok:
+              print(f"Twitter error: {r.text}")
+              exit(1)
 
           # Also send newsletter via Buttondown if API key is set
           bd_key = os.environ.get("BUTTONDOWN_API_KEY", "")
