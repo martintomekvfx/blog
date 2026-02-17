@@ -57,8 +57,6 @@ jobs:
                           "value": {"booleanValue": False},
                       }
                   },
-                  "orderBy": [{"field": {"fieldPath": "pubDate"}, "direction": "DESCENDING"}],
-                  "limit": 1,
               }
           }
           resp = requests.post(url, json=body)
@@ -68,11 +66,18 @@ jobs:
               exit(1)
           results = resp.json()
 
-          if not results or "document" not in results[0]:
+          # Filter out results without a document and sort by pubDate descending client-side
+          docs = [r["document"] for r in results if "document" in r]
+          if not docs:
               print("No published posts found.")
               exit(0)
 
-          doc = results[0]["document"]
+          def get_pub_date(d):
+              val = d.get("fields", {}).get("pubDate", {}).get("stringValue", "")
+              return val or ""
+
+          docs.sort(key=get_pub_date, reverse=True)
+          doc = docs[0]
           fields = doc.get("fields", {})
           slug = doc["name"].split("/")[-1]
 

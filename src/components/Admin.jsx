@@ -112,21 +112,23 @@ function LoginForm({ onLogin }) {
 
 const cmTheme = EditorView.theme({
   "&": {
-    background: "#0a0a0a",
+    backgroundColor: "#0a0a0a !important",
     color: "#e8e8e8",
     fontSize: "13px",
     fontFamily: '"Helvetica Neue", Helvetica, Arial, monospace',
     height: "100%",
   },
-  ".cm-content": { padding: "16px", caretColor: "#fff" },
+  "&.cm-editor": { backgroundColor: "#0a0a0a !important" },
+  "&.cm-focused": { outline: "none" },
+  ".cm-content": { padding: "16px", caretColor: "#fff", backgroundColor: "#0a0a0a" },
   ".cm-line": { lineHeight: "1.7" },
   ".cm-cursor": { borderLeftColor: "#fff" },
-  ".cm-selectionBackground, ::selection": { background: "rgba(255,255,255,0.15) !important" },
-  ".cm-gutters": { background: "#0a0a0a", borderRight: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.2)" },
-  ".cm-activeLineGutter": { background: "rgba(255,255,255,0.04)" },
-  ".cm-activeLine": { background: "rgba(255,255,255,0.03)" },
-  ".cm-scroller": { overflow: "auto" },
-});
+  ".cm-selectionBackground": { backgroundColor: "rgba(255,255,255,0.15) !important" },
+  ".cm-gutters": { backgroundColor: "#0a0a0a !important", borderRight: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.2)" },
+  ".cm-activeLineGutter": { backgroundColor: "rgba(255,255,255,0.04)" },
+  ".cm-activeLine": { backgroundColor: "rgba(255,255,255,0.03) !important" },
+  ".cm-scroller": { overflow: "auto", backgroundColor: "#0a0a0a" },
+}, { dark: true });
 
 const GUIDE_CONTENT = `# Post Writing Guide
 
