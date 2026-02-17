@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { db } from "../lib/firebase";
 import {
@@ -66,6 +66,68 @@ function getReadingTime(text) {
   return Math.max(1, Math.round(words / 220));
 }
 
+function extractToc(mdxSource) {
+  const lines = (mdxSource || "").split("\n");
+  const headings = [];
+  for (const line of lines) {
+    const m = line.match(/^(#{2,3})\s+(.+)$/);
+    if (m) {
+      const level = m[1].length;
+      const text = m[2].replace(/[*_`]/g, "").trim();
+      const id = text.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-");
+      headings.push({ level, text, id });
+    }
+  }
+  return headings;
+}
+
+function TableOfContents({ headings }) {
+  const [active, setActive] = useState("");
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActive(entry.target.id);
+        }
+      },
+      { rootMargin: "-20% 0% -70% 0%" }
+    );
+    for (const h of headings) {
+      const el = document.getElementById(h.id);
+      if (el) observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, [headings]);
+
+  if (headings.length < 3) return null;
+
+  return (
+    <motion.nav
+      className="mb-8 border border-black/10 p-4"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.2 }}
+    >
+      <p className="text-[11px] uppercase tracking-[0.16em] opacity-40 mb-3">Contents</p>
+      <ol className="space-y-1">
+        {headings.map((h) => (
+          <li key={h.id} style={{ paddingLeft: h.level === 3 ? "1rem" : 0 }}>
+            <a
+              href={`#${h.id}`}
+              className={`text-sm transition-opacity duration-150 hover:opacity-100 ${
+                active === h.id ? "opacity-100 font-medium" : "opacity-40"
+              }`}
+            >
+              {h.text}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </motion.nav>
+  );
+}
+
 export default function PostView({ slug }) {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -73,6 +135,8 @@ export default function PostView({ slug }) {
   const [MdxContent, setMdxContent] = useState(null);
   const [mdxError, setMdxError] = useState("");
   const [relatedPosts, setRelatedPosts] = useState([]);
+  const [toc, setToc] = useState([]);
+  const bodyRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,6 +203,10 @@ export default function PostView({ slug }) {
                 setMdxContent(() => compiled);
               }
               setRelatedPosts(related);
+              const wordCount = (data.content || "").trim().split(/\s+/).filter(Boolean).length;
+              if (wordCount > 800) {
+                setToc(extractToc(data.content || ""));
+              }
             }
           }
         } else {
@@ -178,6 +246,33 @@ export default function PostView({ slug }) {
 
   const formattedDate = formatDate(post.pubDate);
   const readingMinutes = getReadingTime(post.content);
+
+  useEffect(() => {
+    if (!bodyRef.current) return;
+    const blocks = bodyRef.current.querySelectorAll("pre");
+    for (const pre of blocks) {
+      if (pre.querySelector(".copy-btn")) continue;
+      const btn = document.createElement("button");
+      btn.textContent = "Copy";
+      btn.className = "copy-btn";
+      btn.addEventListener("click", () => {
+        const code = pre.querySelector("code");
+        navigator.clipboard.writeText(code ? code.innerText : pre.innerText).then(() => {
+          btn.textContent = "Copied";
+          setTimeout(() => { btn.textContent = "Copy"; }, 1800);
+        });
+      });
+      pre.style.position = "relative";
+      pre.appendChild(btn);
+    }
+
+    const headings = bodyRef.current.querySelectorAll("h2, h3");
+    for (const h of headings) {
+      if (!h.id) {
+        h.id = h.textContent.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-");
+      }
+    }
+  }, [MdxContent]);
 
   return (
     <motion.article
@@ -230,13 +325,15 @@ export default function PostView({ slug }) {
           </div>
         )}
       </motion.header>
+      {toc.length > 0 && <TableOfContents headings={toc} />}
+
       {mdxError ? (
         <div className="border border-black p-4 text-sm">
           <p className="font-medium uppercase mb-2">MDX Render Error</p>
           <p className="opacity-80">{mdxError}</p>
         </div>
       ) : MdxContent ? (
-        <div className="post-body prose prose-lg max-w-none">
+        <div ref={bodyRef} className="post-body prose prose-lg max-w-none">
           <MdxContent components={mdxComponents} />
         </div>
       ) : (

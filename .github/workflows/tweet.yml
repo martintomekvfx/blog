@@ -1,84 +1,138 @@
 name: Tweet New Post
 
-# Triggers on push to main, only when posts change
+# Runs after the deploy workflow completes successfully
 on:
-  push:
-    branches: [main]
-    paths:
-      - "src/content/posts/**"
+  workflow_run:
+    workflows: ["Deploy to GitHub Pages"]
+    types: [completed]
 
 jobs:
   tweet:
+    # Only run if deploy succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Detect new posts
-        id: detect
-        run: |
-          NEW_FILES=$(git diff --name-only --diff-filter=A HEAD~1 HEAD -- 'src/content/posts/*.mdx' 'src/content/posts/*.md' || true)
-          if [ -z "$NEW_FILES" ]; then
-            echo "No new posts found."
-            echo "has_new=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "New posts: $NEW_FILES"
-            echo "has_new=true" >> "$GITHUB_OUTPUT"
-            echo "file=$(echo "$NEW_FILES" | head -1)" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Parse frontmatter and tweet
-        if: steps.detect.outputs.has_new == 'true'
+      - name: Fetch newest post from Firestore and tweet
         env:
-          # Set these secrets in your repo settings:
+          # Firebase project config (set as repo variables, not secrets — they are public)
+          FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+          # Twitter / X OAuth 1.0a credentials (set as repo secrets)
           # Settings > Secrets and variables > Actions > New repository secret
-          #
-          # You need a X/Twitter Developer account with OAuth 1.0a credentials:
-          # 1. Go to https://developer.twitter.com/en/portal/dashboard
-          # 2. Create a project & app
-          # 3. Generate API Key, API Secret, Access Token, Access Secret
-          # 4. Add them as repository secrets with the names below
           TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
           TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
           TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
           TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
+          # Buttondown API key for sending newsletter email on publish
+          BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
         run: |
-          FILE="${{ steps.detect.outputs.file }}"
-
-          # Extract frontmatter fields
-          TITLE=$(sed -n 's/^title: *"\(.*\)"/\1/p' "$FILE" | head -1)
-          DESCRIPTION=$(sed -n 's/^description: *"\(.*\)"/\1/p' "$FILE" | head -1)
-          TAGS=$(grep -oP '(?<=\[)[^\]]+' <<< "$(sed -n 's/^tags: *//p' "$FILE")" | tr -d '"' | tr ',' '\n' | sed 's/^ *//' | sed 's/^/#/' | tr '\n' ' ')
-
-          # Build post URL from filename
-          SLUG=$(basename "$FILE" | sed 's/\.[^.]*$//')
-          URL="https://martintomekvfx.github.io/blog/posts/${SLUG}/"
-
-          TWEET="${TITLE} — ${DESCRIPTION} ${URL} ${TAGS}"
-
-          # Trim to 280 chars
-          TWEET=$(echo "$TWEET" | cut -c1-280)
-
-          echo "Tweet: $TWEET"
-
-          # Post using X API v2 with OAuth 1.0a (via curl + oauth header)
           pip install requests requests-oauthlib -q
 
-          python3 - <<PYEOF
-          import os, json
+          python3 - <<'PYEOF'
+          import os, json, requests
+          from datetime import datetime, timezone, timedelta
           from requests_oauthlib import OAuth1Session
 
+          project_id = os.environ.get("FIREBASE_PROJECT_ID", "")
+          if not project_id:
+              print("FIREBASE_PROJECT_ID not set — skipping tweet.")
+              exit(0)
+
+          # Query Firestore REST API for the newest published post
+          url = (
+              f"https://firestore.googleapis.com/v1/projects/{project_id}"
+              f"/databases/(default)/documents:runQuery"
+          )
+          body = {
+              "structuredQuery": {
+                  "from": [{"collectionId": "posts"}],
+                  "where": {
+                      "fieldFilter": {
+                          "field": {"fieldPath": "draft"},
+                          "op": "EQUAL",
+                          "value": {"booleanValue": False},
+                      }
+                  },
+                  "orderBy": [{"field": {"fieldPath": "pubDate"}, "direction": "DESCENDING"}],
+                  "limit": 1,
+              }
+          }
+          resp = requests.post(url, json=body)
+          resp.raise_for_status()
+          results = resp.json()
+
+          if not results or "document" not in results[0]:
+              print("No published posts found.")
+              exit(0)
+
+          doc = results[0]["document"]
+          fields = doc.get("fields", {})
+          slug = doc["name"].split("/")[-1]
+
+          def get_str(field):
+              return field.get("stringValue", "") if field else ""
+
+          title = get_str(fields.get("title"))
+          description = get_str(fields.get("description"))
+          pub_date = get_str(fields.get("pubDate"))
+          tags_raw = fields.get("tags", {}).get("arrayValue", {}).get("values", [])
+          tags = [get_str(t) for t in tags_raw if get_str(t)]
+
+          # Only tweet if the post was published in the last 2 hours
+          # (prevents re-tweeting old posts on every deploy)
+          try:
+              post_dt = datetime.fromisoformat(pub_date)
+              if post_dt.tzinfo is None:
+                  post_dt = post_dt.replace(tzinfo=timezone.utc)
+              age = datetime.now(timezone.utc) - post_dt
+              if age > timedelta(hours=48):
+                  print(f"Post '{title}' is {age} old — skipping tweet.")
+                  exit(0)
+          except Exception as e:
+              print(f"Could not parse pubDate '{pub_date}': {e} — proceeding anyway.")
+
+          post_url = f"https://martintomekvfx.github.io/blog/posts/{slug}/"
+          hashtags = " ".join(f"#{t.replace('-','')}" for t in tags[:3])
+          tweet_text = f"{title}"
+          if description:
+              tweet_text += f"\n\n{description}"
+          tweet_text += f"\n\n{post_url}"
+          if hashtags:
+              tweet_text += f"\n\n{hashtags}"
+          tweet_text = tweet_text[:280]
+
+          print(f"Tweet ({len(tweet_text)} chars):\n{tweet_text}\n")
+
+          api_key = os.environ.get("TWITTER_API_KEY", "")
+          if not api_key:
+              print("TWITTER_API_KEY not set — skipping tweet.")
+              exit(0)
+
           twitter = OAuth1Session(
-              os.environ["TWITTER_API_KEY"],
+              api_key,
               client_secret=os.environ["TWITTER_API_SECRET"],
               resource_owner_key=os.environ["TWITTER_ACCESS_TOKEN"],
               resource_owner_secret=os.environ["TWITTER_ACCESS_SECRET"],
           )
+          r = twitter.post("https://api.twitter.com/2/tweets", json={"text": tweet_text})
+          print(f"Twitter response: {r.status_code}")
+          print(r.json())
 
-          payload = {"text": """$TWEET"""}
-          resp = twitter.post("https://api.twitter.com/2/tweets", json=payload)
-          print(f"Status: {resp.status_code}")
-          print(resp.json())
+          # Also send newsletter via Buttondown if API key is set
+          bd_key = os.environ.get("BUTTONDOWN_API_KEY", "")
+          if bd_key and title:
+              email_body = f"# {title}\n\n"
+              if description:
+                  email_body += f"{description}\n\n"
+              email_body += f"[Read the full post →]({post_url})"
+              bd_resp = requests.post(
+                  "https://api.buttondown.com/v1/emails",
+                  headers={"Authorization": f"Token {bd_key}"},
+                  json={
+                      "subject": title,
+                      "body": email_body,
+                      "status": "about_to_send",
+                  },
+              )
+              print(f"Buttondown response: {bd_resp.status_code}")
+              print(bd_resp.json())
           PYEOF

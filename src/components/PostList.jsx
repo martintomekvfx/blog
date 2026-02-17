@@ -36,6 +36,21 @@ const cardMotion = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
+const CATEGORIES = [
+  { label: "Process", tags: ["process", "behind-the-scenes", "workflow"] },
+  { label: "Tools", tags: ["code", "tools", "python", "open-source", "tutorial"] },
+  { label: "Theory", tags: ["theory", "research", "urbanism", "ecology"] },
+  { label: "Teaching", tags: ["teaching", "workshop", "education", "famu"] },
+  { label: "News", tags: ["news", "exhibition", "festival", "announcement"] },
+];
+
+function matchesCategory(post, categoryLabel) {
+  const cat = CATEGORIES.find((c) => c.label === categoryLabel);
+  if (!cat) return false;
+  const postTags = Array.isArray(post.tags) ? post.tags.map((t) => t.toLowerCase()) : [];
+  return cat.tags.some((t) => postTags.includes(t));
+}
+
 export default function PostList() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +58,7 @@ export default function PostList() {
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [tagFilter, setTagFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -72,15 +88,11 @@ export default function PostList() {
     const initialQuery = params.get("q");
     const initialYear = params.get("year");
     const initialTag = params.get("tag");
-    if (initialQuery) {
-      setSearch(initialQuery);
-    }
-    if (initialYear) {
-      setYearFilter(initialYear);
-    }
-    if (initialTag) {
-      setTagFilter(initialTag);
-    }
+    const initialCategory = params.get("cat");
+    if (initialQuery) setSearch(initialQuery);
+    if (initialYear) setYearFilter(initialYear);
+    if (initialTag) setTagFilter(initialTag);
+    if (initialCategory) setCategoryFilter(initialCategory);
   }, []);
 
   useEffect(() => {
@@ -100,8 +112,13 @@ export default function PostList() {
     } else {
       url.searchParams.delete("tag");
     }
+    if (categoryFilter) {
+      url.searchParams.set("cat", categoryFilter);
+    } else {
+      url.searchParams.delete("cat");
+    }
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-  }, [search, yearFilter, tagFilter]);
+  }, [search, yearFilter, tagFilter, categoryFilter]);
 
   const years = useMemo(() => {
     const values = new Set();
@@ -139,8 +156,10 @@ export default function PostList() {
       const matchesTag =
         tagFilter === "" ||
         (Array.isArray(post.tags) && post.tags.includes(tagFilter));
+      const matchesCategory =
+        categoryFilter === "" || matchesCategory_fn(post, categoryFilter);
 
-      if (!matchesYear || !matchesTag) return false;
+      if (!matchesYear || !matchesTag || !matchesCategory) return false;
 
       if (!queryText) return true;
 
@@ -155,7 +174,7 @@ export default function PostList() {
 
       return searchable.includes(queryText);
     });
-  }, [posts, search, yearFilter, tagFilter]);
+  }, [posts, search, yearFilter, tagFilter, categoryFilter]);
 
   if (loading) {
     return <p className="opacity-60">Loading posts...</p>;
@@ -169,7 +188,8 @@ export default function PostList() {
     );
   }
 
-  const hasFilters = search.trim() || yearFilter || tagFilter;
+  const matchesCategory_fn = matchesCategory;
+  const hasFilters = search.trim() || yearFilter || tagFilter || categoryFilter;
 
   return (
     <motion.div
@@ -202,46 +222,67 @@ export default function PostList() {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 pt-1">
-          <button
-            type="button"
-            onClick={() => { setTagFilter(""); setYearFilter(""); }}
-            className={`text-[11px] uppercase tracking-[0.1em] border px-2 py-0.5 transition-colors duration-100 ${
-              !tagFilter && !yearFilter
-                ? "border-black bg-black text-white"
-                : "border-black/30 hover:border-black hover:bg-black hover:text-white"
-            }`}
-          >
-            All
-          </button>
-          {tags.map(([tag, count]) => (
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] uppercase tracking-[0.14em] opacity-25 mr-1">Category</span>
             <button
-              key={tag}
               type="button"
-              onClick={() => setTagFilter(tagFilter === tag ? "" : tag)}
+              onClick={() => setCategoryFilter("")}
               className={`text-[11px] uppercase tracking-[0.1em] border px-2 py-0.5 transition-colors duration-100 ${
-                tagFilter === tag
+                !categoryFilter
                   ? "border-black bg-black text-white"
                   : "border-black/30 hover:border-black hover:bg-black hover:text-white"
               }`}
             >
-              {tag} <span className="opacity-50">({count})</span>
+              All
             </button>
-          ))}
-          {years.length > 1 && years.map((year) => (
-            <button
-              key={year}
-              type="button"
-              onClick={() => setYearFilter(yearFilter === year ? "" : year)}
-              className={`text-[11px] uppercase tracking-[0.1em] border px-2 py-0.5 transition-colors duration-100 ${
-                yearFilter === year
-                  ? "border-black bg-black text-white"
-                  : "border-black/30 hover:border-black hover:bg-black hover:text-white"
-              }`}
-            >
-              {year}
-            </button>
-          ))}
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.label}
+                type="button"
+                onClick={() => setCategoryFilter(categoryFilter === cat.label ? "" : cat.label)}
+                className={`text-[11px] uppercase tracking-[0.1em] border px-2 py-0.5 transition-colors duration-100 ${
+                  categoryFilter === cat.label
+                    ? "border-black bg-black text-white"
+                    : "border-black/30 hover:border-black hover:bg-black hover:text-white"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] uppercase tracking-[0.14em] opacity-25 mr-1">Tag</span>
+            {tags.map(([tag, count]) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setTagFilter(tagFilter === tag ? "" : tag)}
+                className={`text-[11px] uppercase tracking-[0.1em] border px-2 py-0.5 transition-colors duration-100 ${
+                  tagFilter === tag
+                    ? "border-black bg-black text-white"
+                    : "border-black/30 hover:border-black hover:bg-black hover:text-white"
+                }`}
+              >
+                {tag} <span className="opacity-50">({count})</span>
+              </button>
+            ))}
+            {years.length > 1 && years.map((year) => (
+              <button
+                key={year}
+                type="button"
+                onClick={() => setYearFilter(yearFilter === year ? "" : year)}
+                className={`text-[11px] uppercase tracking-[0.1em] border px-2 py-0.5 transition-colors duration-100 ${
+                  yearFilter === year
+                    ? "border-black bg-black text-white"
+                    : "border-black/30 hover:border-black hover:bg-black hover:text-white"
+                }`}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
         </div>
       </motion.div>
 
@@ -251,7 +292,7 @@ export default function PostList() {
           {hasFilters && (
             <button
               type="button"
-              onClick={() => { setSearch(""); setTagFilter(""); setYearFilter(""); }}
+              onClick={() => { setSearch(""); setTagFilter(""); setYearFilter(""); setCategoryFilter(""); }}
               className="mt-3 text-xs underline underline-offset-4 opacity-60 hover:opacity-100"
             >
               Clear filters

@@ -2,16 +2,20 @@
 const year = new Date().getFullYear();
 ---
 
-<footer class="border-t border-black/20 py-6 mt-auto">
-  <div class="max-w-3xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
-    <span>{year}</span>
-    <a
-      href="https://github.com/martintomekvfx"
-      class="underline underline-offset-4"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      GitHub
-    </a>
+<footer class="border-t border-black/10 py-8 mt-auto">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      <div>
+        <p class="text-xs uppercase tracking-[0.16em] font-bold mb-1">Martin Tomek</p>
+        <p class="text-[11px] opacity-35">Art · VFX · Research · Teaching</p>
+      </div>
+      <nav class="flex flex-wrap gap-x-6 gap-y-2">
+        <a href="/blog/newsletter/" class="text-[11px] uppercase tracking-[0.1em] opacity-50 hover:opacity-100 transition-opacity">Newsletter</a>
+        <a href="/blog/rss.xml" class="text-[11px] uppercase tracking-[0.1em] opacity-50 hover:opacity-100 transition-opacity">RSS</a>
+        <a href="/blog/projects/" class="text-[11px] uppercase tracking-[0.1em] opacity-50 hover:opacity-100 transition-opacity">Projects</a>
+        <a href="https://github.com/martintomekvfx" target="_blank" rel="noopener noreferrer" class="text-[11px] uppercase tracking-[0.1em] opacity-50 hover:opacity-100 transition-opacity">GitHub</a>
+      </nav>
+    </div>
+    <p class="mt-6 text-[11px] opacity-25">{year}</p>
   </div>
 </footer>

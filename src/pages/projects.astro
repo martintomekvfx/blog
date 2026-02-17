@@ -1,73 +1,119 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 
-const tracks = [
+const projects = [
   {
-    title: "Guerilla",
-    summary: "Interventions in public space, tactical urbanism, and street-level experiments.",
-    items: [
-      { label: "Slunečnice na Palmovce", href: "https://martintomekvfx.github.io/work/slunecnice" },
-      { label: "Houpačka", href: "https://martintomekvfx.github.io/work/houpacka" },
-      { label: "ChompAR", href: "https://martintomekvfx.github.io/work/chompar" },
-    ],
+    title: "ChompAR",
+    year: "2024",
+    category: "Interactive",
+    tags: ["guerilla", "ar", "interactive", "palmovka"],
+    context: "AR intervention for public space in Prague 8. Visitors trigger animated characters anchored to physical markers placed around Palmovka.",
+    process: "Built with 8th Wall (WebAR). Markers designed as minimal black squares — the same visual language as the SquarePulse system. No app install required.",
+    result: "Deployed at three locations around Palmovka. Part of ongoing research into attention ecology and low-threshold public interaction.",
+    href: "https://martintomekvfx.github.io/",
   },
   {
-    title: "Analog",
-    summary: "Scanner image-making, VJ sets, and material-based visual workflows.",
-    items: [
-      { label: "Original Copy", href: "https://martintomekvfx.github.io/work/original-copy" },
-      { label: "Scanner Series", href: "https://martintomekvfx.github.io/work/scanner-series" },
-      { label: "35mm Photography", href: "https://martintomekvfx.github.io/work/35mm-photo" },
-    ],
+    title: "Slunečnice na Palmovce",
+    year: "2023",
+    category: "Installation",
+    tags: ["guerilla", "installation", "urbanism", "palmovka"],
+    context: "Temporary installation of oversized sunflowers placed in neglected urban corners around Palmovka metro station.",
+    process: "Handmade from recycled materials. Placed overnight without permission. Documented and removed within 48 hours.",
+    result: "Generated local discussion about the use of transitional urban space. Documented in a short video essay.",
+    href: "https://martintomekvfx.github.io/",
   },
   {
-    title: "Game Jam",
-    summary: "Rapid interactive prototypes connecting visual language and gameplay.",
-    items: [
-      { label: "Untitled Roach Game", href: "https://martintomekvfx.github.io/work/untitled-roach-game" },
-      { label: "Agent Chaos", href: "https://martintomekvfx.github.io/work/agent-chaos" },
-      { label: "Běsnění", href: "https://martintomekvfx.github.io/work/besneni" },
-    ],
+    title: "Original Copy",
+    year: "2023",
+    category: "Analog",
+    tags: ["analog", "scanner", "installation", "vfx"],
+    context: "A series of scanner-based images exploring the boundary between original and reproduction. Exhibited at VŠKK.",
+    process: "Flatbed scanner used as a camera — objects placed directly on the glass, long exposure, multiple passes. Post-processed in Nuke.",
+    result: "12-piece series. Exhibited as large-format prints. One piece acquired for the school collection.",
+    href: "https://martintomekvfx.github.io/",
+  },
+  {
+    title: "Untitled Roach Game",
+    year: "2024",
+    category: "Game Jam",
+    tags: ["game", "interactive", "code"],
+    context: "48-hour game jam entry. A survival game where you play as a cockroach navigating a brutalist apartment block.",
+    process: "Built in Godot 4. Pixel art assets made during the jam. Sound design from field recordings.",
+    result: "Submitted to itch.io. 200+ plays in first week. Source code open on GitHub.",
+    href: "https://jamiiethetrashman.itch.io/",
+  },
+  {
+    title: "Footprint",
+    year: "2024",
+    category: "Tool",
+    tags: ["code", "tools", "python", "open-source"],
+    context: "A Python CLI for analysing the environmental footprint of VFX render farms. Built for a FAMU research seminar.",
+    process: "Reads render logs from Deadline / Tractor. Calculates estimated kWh and CO₂ per shot. Outputs a report.",
+    result: "Open source on GitHub. Used by two studios for internal reporting.",
+    href: "https://github.com/martintomekvfx",
   },
 ];
+
+const categories = [...new Set(projects.map((p) => p.category))];
 ---
 
-<BaseLayout title="Projects | Martin Tomek" description="Case studies and project tracks from Martin Tomek's portfolio.">
-  <section class="space-y-8">
-    <header class="border-y border-black/20 py-8">
-      <p class="text-xs uppercase tracking-[0.16em] opacity-60">Projects</p>
-      <h1 class="mt-3 text-4xl font-bold text-balance sm:text-5xl">Case studies & tracks</h1>
-      <p class="mt-4 max-w-2xl opacity-75 text-pretty">
-        A curated view of ongoing and finished work. Full archive is available on the main
-        portfolio site.
+<BaseLayout
+  title="Projects | Martin Tomek"
+  description="Case studies and project tracks — guerilla art, VFX tools, game jams, and installations."
+>
+  <section>
+    <header class="pt-10 pb-12 border-b border-black/10">
+      <p class="text-[11px] uppercase tracking-[0.2em] opacity-35 mb-6">Projects</p>
+      <h1 class="text-[clamp(2.4rem,6vw,4rem)] font-bold leading-[1.05] tracking-[-0.03em] mb-6">
+        Case studies
+      </h1>
+      <p class="max-w-lg text-sm opacity-50 leading-relaxed">
+        Selected work across guerilla art, VFX tools, game jams, and installations.
+        Full archive at <a href="https://martintomekvfx.github.io/" class="underline underline-offset-4" target="_blank" rel="noopener noreferrer">martintomekvfx.github.io</a>.
       </p>
     </header>
 
-    <div class="grid gap-4">
-      {tracks.map((track) => (
-        <article class="border border-black p-4 sm:p-5">
-          <h2 class="text-sm uppercase tracking-[0.12em] mb-2">{track.title}</h2>
-          <p class="text-sm opacity-80 mb-4">{track.summary}</p>
-          <ul class="space-y-2 text-sm">
-            {track.items.map((item) => (
-              <li>
-                <a
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="underline underline-offset-4 hover:opacity-70"
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
+    <div class="divide-y divide-black/10">
+      {projects.map((project) => (
+        <article class="py-10 grid gap-6 sm:grid-cols-[1fr_2fr]">
+          <div>
+            <p class="text-[11px] uppercase tracking-[0.16em] opacity-35 mb-2">{project.year} · {project.category}</p>
+            <h2 class="text-xl font-bold tracking-[-0.02em] mb-3">{project.title}</h2>
+            <div class="flex flex-wrap gap-1.5">
+              {project.tags.map((tag) => (
+                <span class="text-[10px] uppercase tracking-[0.1em] border border-black/20 px-2 py-0.5 opacity-50">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div class="space-y-4 text-sm">
+            <div>
+              <p class="text-[10px] uppercase tracking-[0.14em] opacity-30 mb-1">Context</p>
+              <p class="opacity-70 leading-relaxed">{project.context}</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase tracking-[0.14em] opacity-30 mb-1">Process</p>
+              <p class="opacity-55 leading-relaxed">{project.process}</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase tracking-[0.14em] opacity-30 mb-1">Result</p>
+              <p class="opacity-55 leading-relaxed">{project.result}</p>
+            </div>
+            {project.href && (
+              <a
+                href={project.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-block text-[11px] uppercase tracking-[0.1em] border border-black/30 px-3 py-1.5 hover:bg-black hover:text-white hover:border-black transition-colors duration-150"
+              >
+                View →
+              </a>
+            )}
+          </div>
         </article>
       ))}
     </div>
-
-    <p class="text-sm opacity-70">
-      Full portfolio: <a href="https://martintomekvfx.github.io/" class="underline underline-offset-4">martintomekvfx.github.io</a>
-    </p>
   </section>
 </BaseLayout>
