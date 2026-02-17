@@ -24,14 +24,14 @@ export default function CodePlayground({ code = "", language = "javascript" }) {
   }
 
   return (
-    <div className="not-prose border border-white my-6">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-white">
+    <div className="not-prose border border-black my-6">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-black">
         <span className="text-xs uppercase opacity-60">
           {language}
         </span>
         <button
           onClick={run}
-          className="px-3 py-1 text-xs font-medium uppercase border border-white bg-white text-black hover:bg-black hover:text-white transition-colors duration-100"
+          className="px-3 py-1 text-xs font-medium uppercase border border-black bg-black text-white hover:bg-white hover:text-black transition-colors duration-100"
         >
           Run
         </button>
@@ -41,11 +41,11 @@ export default function CodePlayground({ code = "", language = "javascript" }) {
         value={source}
         onChange={(e) => setSource(e.target.value)}
         spellCheck={false}
-        className="block w-full bg-black text-white text-sm font-mono p-4 resize-y min-h-24 focus:outline-none"
+        className="block w-full bg-white text-black text-sm font-mono p-4 resize-y min-h-24 focus:outline-none"
         rows={source.split("\n").length + 1}
       />
       {output && (
-        <div className="border-t border-white p-4">
+        <div className="border-t border-black p-4 bg-black text-white">
           <pre className="text-sm font-mono opacity-60 whitespace-pre-wrap">
             {output}
           </pre>

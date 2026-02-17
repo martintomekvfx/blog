@@ -50,7 +50,7 @@ export default function PostList() {
   return (
     <div>
       {posts.map((post) => (
-        <article key={post.id} className="border-b border-white/20 py-6">
+        <article key={post.id} className="border-b border-black/20 py-6">
           <a
             href={`/blog/posts/${post.id}/`}
             className="block group"
@@ -73,7 +73,7 @@ export default function PostList() {
                 <a
                   key={tag}
                   href={`/blog/tags/${tag}/`}
-                  className="text-xs border border-white px-2 py-0.5 hover:bg-white hover:text-black transition-colors duration-100"
+                  className="text-xs border border-black px-2 py-0.5 hover:bg-black hover:text-white transition-colors duration-100"
                 >
                   {tag}
                 </a>

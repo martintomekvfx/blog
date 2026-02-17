@@ -194,8 +194,11 @@ function PostEditor({ post, onSave, onCancel }) {
 
         <div>
           <label className="block text-xs uppercase mb-1">
-            Content (Markdown)
+            Content (MDX)
           </label>
+          <p className="text-xs opacity-60 mb-2">
+            You can use Markdown and JSX components, e.g. {"<CodePlayground code=\"console.log('hi')\" language=\"javascript\" />"}
+          </p>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}

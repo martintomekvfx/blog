@@ -26,21 +26,23 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   scroll-behavior: smooth;
 }
 
 body {
-  background-color: #000;
-  color: #fff;
+  background-color: #fff;
+  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+  background-size: 100% 2.75rem;
+  color: #0b0b0b;
   font-family: "Neue Montreal", "Helvetica Neue", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {
-  background-color: #fff;
-  color: #000;
+  background-color: #111;
+  color: #fff;
 }
 
 * {
@@ -48,20 +50,20 @@ body {
 }
 
 .prose {
-  --tw-prose-body: #fff;
-  --tw-prose-headings: #fff;
-  --tw-prose-links: #fff;
-  --tw-prose-bold: #fff;
-  --tw-prose-counters: #fff;
-  --tw-prose-bullets: #fff;
-  --tw-prose-hr: #fff;
-  --tw-prose-quotes: #fff;
-  --tw-prose-quote-borders: #fff;
-  --tw-prose-code: #fff;
-  --tw-prose-pre-code: #fff;
-  --tw-prose-pre-bg: #000;
-  --tw-prose-th-borders: #fff;
-  --tw-prose-td-borders: #fff;
+  --tw-prose-body: #111;
+  --tw-prose-headings: #111;
+  --tw-prose-links: #111;
+  --tw-prose-bold: #111;
+  --tw-prose-counters: #111;
+  --tw-prose-bullets: #111;
+  --tw-prose-hr: #111;
+  --tw-prose-quotes: #111;
+  --tw-prose-quote-borders: #111;
+  --tw-prose-code: #111;
+  --tw-prose-pre-code: #111;
+  --tw-prose-pre-bg: #f7f7f7;
+  --tw-prose-th-borders: #111;
+  --tw-prose-td-borders: #111;
 }
 
 .prose a {
@@ -75,23 +77,23 @@ body {
 }
 
 .prose code:not(pre code) {
-  background-color: #fff;
-  color: #000;
+  background-color: #111;
+  color: #fff;
   padding: 0.15em 0.4em;
   font-size: 0.875em;
 }
 
 .prose pre {
-  border: 1px solid #fff;
+  border: 1px solid #111;
 }
 
 .prose blockquote {
-  border-left: 3px solid #fff;
+  border-left: 3px solid #111;
 }
 
 .prose table th,
 .prose table td {
-  border: 1px solid #fff;
+  border: 1px solid #111;
 }
 
 ::-webkit-scrollbar {
@@ -100,9 +102,9 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #000;
+  background: #fff;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #fff;
+  background: #111;
 }

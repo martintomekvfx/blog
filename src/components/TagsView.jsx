@@ -62,7 +62,7 @@ export default function TagsView({ tag }) {
         ) : (
           <div>
             {posts.map((post) => (
-              <article key={post.id} className="border-b border-white/20 py-6">
+              <article key={post.id} className="border-b border-black/20 py-6">
                 <a href={`/blog/posts/${post.id}/`} className="block group">
                   <h2 className="text-xl font-bold text-balance group-hover:underline underline-offset-4">
                     {post.title}
@@ -101,7 +101,7 @@ export default function TagsView({ tag }) {
             <li key={t}>
               <a
                 href={`/blog/tags/${t}/`}
-                className="inline-flex items-center gap-1.5 border border-white px-3 py-1.5 text-sm hover:bg-white hover:text-black transition-colors duration-100"
+                className="inline-flex items-center gap-1.5 border border-black px-3 py-1.5 text-sm hover:bg-black hover:text-white transition-colors duration-100"
               >
                 {t}
                 <span className="text-xs opacity-60 tabular-nums">

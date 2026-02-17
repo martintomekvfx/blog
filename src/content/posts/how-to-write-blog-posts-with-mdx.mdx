@@ -1,0 +1,89 @@
+---
+title: "How to Write a Blog Post with MDX"
+description: "A practical guide for writing clean, interactive MDX posts in this blog."
+pubDate: 2026-02-17
+tags: ["mdx", "writing", "guide"]
+draft: false
+---
+
+import CodePlayground from '../../components/CodePlayground.jsx'
+
+# How to write a blog post with MDX
+
+MDX is Markdown plus JSX. It lets you write a normal article and drop interactive React components directly into the post.
+
+This blog supports that workflow, so you can keep writing simple and only add components when they improve the article.
+
+## 1) Start with clean frontmatter
+
+Every post should open with metadata:
+
+```yaml
+---
+title: "Your post title"
+description: "One sentence summary"
+pubDate: 2026-02-17
+tags: ["mdx", "tutorial"]
+draft: false
+---
+```
+
+Keep titles short, descriptions specific, and tags consistent.
+
+## 2) Outline before writing
+
+A simple structure works best:
+
+- Why this matters
+- Main steps
+- One real example
+- Wrap-up with a checklist
+
+Use `##` and `###` headings so the table of contents stays clear.
+
+## 3) Use code blocks for static examples
+
+```js
+export function slugify(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+```
+
+Use short examples that demonstrate one idea at a time.
+
+## 4) Add interactive blocks only when useful
+
+MDX components are powerful, but use them with intent.
+
+<CodePlayground client:load code={`const headline = "MDX makes posts interactive";
+
+const words = headline.split(" ");
+console.log("Word count:", words.length);
+console.log("Uppercase:", headline.toUpperCase());`} language="javascript" />
+
+If a component does not improve understanding, leave it out.
+
+## 5) Keep paragraphs readable
+
+- Prefer short paragraphs.
+- Add breathing room between sections.
+- End with practical next steps.
+
+## Publishing checklist
+
+Before you publish:
+
+- [ ] Title is specific
+- [ ] Description explains the value
+- [ ] Headings form a logical flow
+- [ ] Code snippets are tested
+- [ ] Tags match your taxonomy
+- [ ] `draft` is set to `false`
+
+Good MDX posts feel like normal writing first, with interactivity as a precise tool.

@@ -1,7 +1,45 @@
 import { useState, useEffect } from "react";
 import { db } from "../lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { marked } from "marked";
+import { evaluate } from "@mdx-js/mdx";
+import * as runtime from "react/jsx-runtime";
+import CodePlayground from "./CodePlayground.jsx";
+
+const mdxComponents = {
+  CodePlayground,
+};
+
+function normalizeMdxSource(source) {
+  let text = String(source || "").replace(/\r\n/g, "\n");
+
+  if (text.startsWith("---")) {
+    const end = text.indexOf("\n---\n", 3);
+    if (end !== -1) {
+      text = text.slice(end + 5);
+    }
+  }
+
+  const lines = text.split("\n");
+  const cleaned = [];
+  let stripImports = true;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (stripImports) {
+      if (line === "") {
+        cleaned.push(rawLine);
+        continue;
+      }
+      if (line.startsWith("import ") || line.startsWith("export ")) {
+        continue;
+      }
+      stripImports = false;
+    }
+    cleaned.push(rawLine);
+  }
+
+  return cleaned.join("\n");
+}
 
 function formatDate(value) {
   const parsed = new Date(value);
@@ -22,27 +60,65 @@ export default function PostView({ slug }) {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [MdxContent, setMdxContent] = useState(null);
+  const [mdxError, setMdxError] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+
     async function load() {
+      setLoading(true);
+      setNotFound(false);
+      setPost(null);
+      setMdxContent(null);
+      setMdxError("");
+
       try {
         const snap = await getDoc(doc(db, "posts", slug));
         if (snap.exists()) {
           const data = snap.data();
           if (data.draft) {
-            setNotFound(true);
+            if (!cancelled) setNotFound(true);
           } else {
-            setPost(data);
+            const normalizedSource = normalizeMdxSource(data.content || "");
+            let compiled = null;
+
+            try {
+              const module = await evaluate(normalizedSource, {
+                ...runtime,
+                baseUrl: import.meta.url,
+              });
+              compiled = module.default;
+            } catch (err) {
+              if (!cancelled) {
+                setMdxError(err?.message || "Invalid MDX syntax.");
+              }
+            }
+
+            if (!cancelled) {
+              setPost(data);
+              if (compiled) {
+                setMdxContent(() => compiled);
+              }
+            }
           }
         } else {
-          setNotFound(true);
+          if (!cancelled) setNotFound(true);
         }
       } catch {
-        setNotFound(true);
+        if (!cancelled) setNotFound(true);
       }
-      setLoading(false);
+
+      if (!cancelled) {
+        setLoading(false);
+      }
     }
+
     load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   if (loading) {
@@ -61,7 +137,6 @@ export default function PostView({ slug }) {
     );
   }
 
-  const html = marked.parse(post.content || "");
   const formattedDate = formatDate(post.pubDate);
   const readingMinutes = getReadingTime(post.content);
 
@@ -74,7 +149,7 @@ export default function PostView({ slug }) {
         Back to home
       </a>
 
-      <header className="mt-5 mb-10 border-y border-white py-8">
+      <header className="mt-5 mb-10 border-y border-black/30 py-8">
         <p className="text-xs uppercase tracking-[0.14em] opacity-60 mb-4">Article</p>
         <h1 className="text-4xl sm:text-5xl font-bold leading-tight text-balance mb-3">
           {post.title}
@@ -95,7 +170,7 @@ export default function PostView({ slug }) {
               <a
                 key={tag}
                 href={`/blog/tags/${tag}/`}
-                className="text-xs border border-white px-2 py-0.5 hover:bg-white hover:text-black transition-colors duration-100"
+                className="text-xs border border-black px-2 py-0.5 hover:bg-black hover:text-white transition-colors duration-100"
               >
                 {tag}
               </a>
@@ -103,7 +178,18 @@ export default function PostView({ slug }) {
           </div>
         )}
       </header>
-      <div className="post-body prose prose-invert prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
+      {mdxError ? (
+        <div className="border border-black p-4 text-sm">
+          <p className="font-medium uppercase mb-2">MDX Render Error</p>
+          <p className="opacity-80">{mdxError}</p>
+        </div>
+      ) : MdxContent ? (
+        <div className="post-body prose prose-lg max-w-none">
+          <MdxContent components={mdxComponents} />
+        </div>
+      ) : (
+        <p className="opacity-60">Rendering post...</p>
+      )}
     </article>
   );
 }
