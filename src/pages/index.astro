@@ -1,16 +1,12 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import HomeHero from "../components/HomeHero.jsx";
 import PostList from "../components/PostList.jsx";
 ---
 
-<BaseLayout title="Blog" description="A tech & art blog">
+<BaseLayout title="Martin Tomek | Notes" description="Art, VFX, and research notes by Martin Tomek.">
   <section>
-    <h1 class="text-3xl font-bold text-balance mb-1">Blog</h1>
-    <p class="opacity-60 text-pretty mb-8">
-      Thoughts on tech, art, and everything in between.
-    </p>
-
-    <p class="text-xs uppercase tracking-[0.12em] opacity-60 mb-4">Live posts from Firebase CMS</p>
+    <HomeHero client:load />
     <PostList client:load />
   </section>
 </BaseLayout>

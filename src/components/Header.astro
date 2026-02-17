@@ -1,6 +1,7 @@
 ---
 const navLinks = [
   { href: "/blog/", label: "Home" },
+  { href: "/blog/projects/", label: "Projects" },
   { href: "/blog/about/", label: "About" },
   { href: "/blog/newsletter/", label: "Newsletter" },
 ];
@@ -10,16 +11,16 @@ const currentPath = Astro.url.pathname;
 
 <header class="sticky top-0 z-40 border-b border-black/20 bg-white/95 backdrop-blur">
   <nav class="max-w-3xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-    <a href="/blog/" class="text-lg font-bold uppercase tracking-tight">
-      Blog
+    <a href="/blog/" class="text-sm sm:text-base font-bold uppercase tracking-[0.12em]">
+      Martin Tomek
     </a>
-    <ul class="flex items-center gap-3 sm:gap-6">
+    <ul class="flex items-center gap-2 sm:gap-6">
       {navLinks.map(({ href, label }) => (
         <li>
           <a
             href={href}
             class:list={[
-              "text-sm uppercase",
+              "text-[11px] sm:text-sm uppercase",
               currentPath === href || (href !== "/blog/" && currentPath.startsWith(href))
                 ? "underline underline-offset-4"
                 : "hover:underline hover:underline-offset-4",

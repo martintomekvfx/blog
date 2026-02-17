@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { db } from "../lib/firebase";
 import {
   collection,
@@ -29,6 +30,11 @@ function getReadingTime(text) {
     .filter(Boolean).length;
   return Math.max(1, Math.round(words / 220));
 }
+
+const cardMotion = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+};
 
 export default function PostList() {
   const [posts, setPosts] = useState([]);
@@ -164,8 +170,17 @@ export default function PostList() {
   }
 
   return (
-    <div>
-      <div className="mb-6 space-y-3">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
+      <motion.div
+        className="mb-6 space-y-3"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
         <label className="block">
           <span className="sr-only">Search posts</span>
           <input
@@ -236,7 +251,7 @@ export default function PostList() {
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {filteredPosts.length === 0 ? (
         <div className="text-center py-16 border-y border-black/20">
@@ -244,7 +259,14 @@ export default function PostList() {
         </div>
       ) : (
         filteredPosts.map((post) => (
-          <article key={post.id} className="border-b border-black/20 py-6">
+          <motion.article
+            key={post.id}
+            className="border-b border-black/20 py-6"
+            variants={cardMotion}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.12 }}
+          >
             <a
               href={`/blog/posts/${post.id}/`}
               className="block group"
@@ -276,9 +298,9 @@ export default function PostList() {
                 ))}
               </div>
             )}
-          </article>
+          </motion.article>
         ))
       )}
-    </div>
+    </motion.div>
   );
 }

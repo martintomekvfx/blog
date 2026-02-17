@@ -28,6 +28,23 @@ function slugify(text) {
     .replace(/^-|-$/g, "");
 }
 
+const SQUARE_POST_TEMPLATE = `# From Palmovka to Pixel Squares
+
+Urban space is full of visual noise. I like to counter that with one clear signal.
+
+<SquarePulse title="Palmovka signal" caption="A simple square used as a visual anchor in public-space interventions." />
+
+## Why this matters
+
+- A square can work like a tiny stage in the middle of chaos.
+- Repetition builds recognition.
+- Small visual gestures can re-activate neglected places.
+
+## Process note
+
+I document these interventions as part of a broader practice spanning film, VFX, tactical urbanism, and teaching.
+`;
+
 // --- Components ---
 
 function LoginForm({ onLogin }) {
@@ -101,6 +118,13 @@ function PostEditor({ post, onSave, onCancel }) {
   const [body, setBody] = useState(post?.content || "\nWrite your post here.\n");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  function insertSquareTemplate() {
+    setTitle("From Palmovka to Pixel Squares");
+    setDescription("How a minimal square marker can reframe attention in public space.");
+    setTags("process, tactical-urbanism, visual-language");
+    setBody(SQUARE_POST_TEMPLATE);
+  }
 
   async function handleSave() {
     if (!title.trim()) {
@@ -193,11 +217,18 @@ function PostEditor({ post, onSave, onCancel }) {
         </label>
 
         <div>
-          <label className="block text-xs uppercase mb-1">
-            Content (MDX)
-          </label>
+          <div className="flex items-center justify-between gap-4 mb-1">
+            <label className="block text-xs uppercase">Content (MDX)</label>
+            <button
+              type="button"
+              onClick={insertSquareTemplate}
+              className="text-[11px] uppercase underline underline-offset-4"
+            >
+              Insert square post template
+            </button>
+          </div>
           <p className="text-xs opacity-60 mb-2">
-            You can use Markdown and JSX components, e.g. {"<CodePlayground code=\"console.log('hi')\" language=\"javascript\" />"}
+            You can use Markdown and JSX components, e.g. {"<CodePlayground code=\"console.log('hi')\" language=\"javascript\" />"} or {"<SquarePulse title=\"Signal\" />"}
           </p>
           <textarea
             value={body}
@@ -432,7 +463,7 @@ function Dashboard({ onLogout }) {
       )}
 
       <p className="mt-8 text-xs opacity-60">
-        Changes are saved instantly to Firestore. No rebuild needed.
+        Changes are saved instantly. No rebuild needed.
       </p>
     </div>
   );

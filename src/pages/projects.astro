@@ -1,0 +1,73 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const tracks = [
+  {
+    title: "Guerilla",
+    summary: "Interventions in public space, tactical urbanism, and street-level experiments.",
+    items: [
+      { label: "Slunečnice na Palmovce", href: "https://martintomekvfx.github.io/work/slunecnice" },
+      { label: "Houpačka", href: "https://martintomekvfx.github.io/work/houpacka" },
+      { label: "ChompAR", href: "https://martintomekvfx.github.io/work/chompar" },
+    ],
+  },
+  {
+    title: "Analog",
+    summary: "Scanner image-making, VJ sets, and material-based visual workflows.",
+    items: [
+      { label: "Original Copy", href: "https://martintomekvfx.github.io/work/original-copy" },
+      { label: "Scanner Series", href: "https://martintomekvfx.github.io/work/scanner-series" },
+      { label: "35mm Photography", href: "https://martintomekvfx.github.io/work/35mm-photo" },
+    ],
+  },
+  {
+    title: "Game Jam",
+    summary: "Rapid interactive prototypes connecting visual language and gameplay.",
+    items: [
+      { label: "Untitled Roach Game", href: "https://martintomekvfx.github.io/work/untitled-roach-game" },
+      { label: "Agent Chaos", href: "https://martintomekvfx.github.io/work/agent-chaos" },
+      { label: "Běsnění", href: "https://martintomekvfx.github.io/work/besneni" },
+    ],
+  },
+];
+---
+
+<BaseLayout title="Projects | Martin Tomek" description="Case studies and project tracks from Martin Tomek's portfolio.">
+  <section class="space-y-8">
+    <header class="border-y border-black/20 py-8">
+      <p class="text-xs uppercase tracking-[0.16em] opacity-60">Projects</p>
+      <h1 class="mt-3 text-4xl font-bold text-balance sm:text-5xl">Case studies & tracks</h1>
+      <p class="mt-4 max-w-2xl opacity-75 text-pretty">
+        A curated view of ongoing and finished work. Full archive is available on the main
+        portfolio site.
+      </p>
+    </header>
+
+    <div class="grid gap-4">
+      {tracks.map((track) => (
+        <article class="border border-black p-4 sm:p-5">
+          <h2 class="text-sm uppercase tracking-[0.12em] mb-2">{track.title}</h2>
+          <p class="text-sm opacity-80 mb-4">{track.summary}</p>
+          <ul class="space-y-2 text-sm">
+            {track.items.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="underline underline-offset-4 hover:opacity-70"
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </div>
+
+    <p class="text-sm opacity-70">
+      Full portfolio: <a href="https://martintomekvfx.github.io/" class="underline underline-offset-4">martintomekvfx.github.io</a>
+    </p>
+  </section>
+</BaseLayout>

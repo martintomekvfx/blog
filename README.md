@@ -1,6 +1,10 @@
-# Blog
+# Martin Tomek Blog
 
-A minimalist tech & art blog built with Astro, MDX, and Tailwind CSS. Deployed automatically to GitHub Pages via GitHub Actions.
+A brutalist, editorial blog for art / VFX / research notes built with Astro + React.
+
+- Public site: GitHub Pages
+- Publishing UI: `/blog/admin/`
+- Post source of truth: Firestore
 
 ## Quick Start
 
@@ -11,43 +15,22 @@ npm run dev
 
 Open [http://localhost:4321/blog/](http://localhost:4321/blog/)
 
-## Writing Posts
+## Publishing Posts (Admin + MDX)
 
-Create MDX files in `src/content/posts/`:
+1. Open `/blog/admin/`
+2. Create or edit a post
+3. Write content in MDX
+4. Publish by turning off `draft`
 
-```mdx
----
-title: "My Post Title"
-description: "A short description."
-pubDate: 2026-02-16
-tags: ["tag1", "tag2"]
-draft: false
----
-
-# My Post
-
-Content goes here. You can use standard markdown plus JSX components.
-```
-
-### Frontmatter fields
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `title` | string | yes | Post title |
-| `description` | string | yes | Short description for SEO and cards |
-| `pubDate` | date | yes | Publication date |
-| `updatedDate` | date | no | Last updated date |
-| `heroImage` | string | no | Path to hero image (e.g. `/blog/images/hero.jpg`) |
-| `tags` | string[] | no | List of tags |
-| `draft` | boolean | no | If `true`, hidden in production |
-
-### Using components in MDX
+Supported embed components inside post content:
 
 ```mdx
-import CodePlayground from '../../components/CodePlayground.jsx'
+<CodePlayground code={`console.log("hello");`} language="javascript" />
 
-<CodePlayground client:load code={`console.log("hello");`} language="javascript" />
+<SquarePulse title="Signal" caption="A visual marker in public space." />
 ```
+
+The editor also includes an **Insert square post template** shortcut to start a new article draft quickly.
 
 ## CLI Tool
 
@@ -88,6 +71,21 @@ Deployment is automatic. Every push to `main` triggers `.github/workflows/deploy
 2. Set **Source** to **GitHub Actions**
 3. Push to `main` — the site will be live at `https://martintomekvfx.github.io/blog/`
 
+### Optional build variables
+
+Set repository variable `PUBLIC_BUTTONDOWN_USERNAME` (Settings → Secrets and variables → Actions → Variables)
+to enable the live newsletter subscribe form in production builds.
+
+## Newsletter Setup (Buttondown)
+
+1. Create a Buttondown account
+2. Choose your username (e.g. `martintomek`)
+3. Add variable `PUBLIC_BUTTONDOWN_USERNAME` in GitHub repo variables
+4. Push to `main` to redeploy
+5. Newsletter page is available at `/blog/newsletter/`
+
+The RSS feed remains available at `/blog/rss.xml` for automation.
+
 ## Pages CMS
 
 This repo supports [Pages CMS](https://pagescms.org) for browser-based content editing.
@@ -126,7 +124,7 @@ blog/
 ├── public/images/         # Static images
 ├── src/
 │   ├── components/        # Astro & React components
-│   ├── content/posts/     # MDX blog posts
+│   ├── lib/               # Firebase client config
 │   ├── layouts/           # Page layouts
 │   ├── pages/             # Routes
 │   └── styles/            # Global CSS

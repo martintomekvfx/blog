@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { db } from "../lib/firebase";
 import {
   collection,
@@ -11,9 +12,11 @@ import {
 import { evaluate } from "@mdx-js/mdx";
 import * as runtime from "react/jsx-runtime";
 import CodePlayground from "./CodePlayground.jsx";
+import SquarePulse from "./SquarePulse.jsx";
 
 const mdxComponents = {
   CodePlayground,
+  SquarePulse,
 };
 
 function normalizeMdxSource(source) {
@@ -177,15 +180,28 @@ export default function PostView({ slug }) {
   const readingMinutes = getReadingTime(post.content);
 
   return (
-    <article className="post-view pb-10">
-      <a
+    <motion.article
+      className="post-view pb-10"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+    >
+      <motion.a
         href="/blog/"
         className="inline-block text-xs uppercase underline underline-offset-4 opacity-80 hover:opacity-100"
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.25, delay: 0.08 }}
       >
         Back to home
-      </a>
+      </motion.a>
 
-      <header className="mt-5 mb-10 border-y border-black/30 py-8">
+      <motion.header
+        className="mt-5 mb-10 border-y border-black/30 py-8"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, delay: 0.1 }}
+      >
         <p className="text-xs uppercase tracking-[0.14em] opacity-60 mb-4">Article</p>
         <h1 className="text-4xl sm:text-5xl font-bold leading-tight text-balance mb-3">
           {post.title}
@@ -213,7 +229,7 @@ export default function PostView({ slug }) {
             ))}
           </div>
         )}
-      </header>
+      </motion.header>
       {mdxError ? (
         <div className="border border-black p-4 text-sm">
           <p className="font-medium uppercase mb-2">MDX Render Error</p>
@@ -228,7 +244,13 @@ export default function PostView({ slug }) {
       )}
 
       {relatedPosts.length > 0 && (
-        <section className="mt-12 border-t border-black/20 pt-8">
+        <motion.section
+          className="mt-12 border-t border-black/20 pt-8"
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
           <h2 className="text-xl font-bold uppercase tracking-[0.06em] mb-4">Related articles</h2>
           <div>
             {relatedPosts.map((related) => (
@@ -247,8 +269,8 @@ export default function PostView({ slug }) {
               </article>
             ))}
           </div>
-        </section>
+        </motion.section>
       )}
-    </article>
+    </motion.article>
   );
 }
