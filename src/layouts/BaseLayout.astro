@@ -7,12 +7,18 @@ interface Props {
   title: string;
   description?: string;
   image?: string;
+  ogType?: "website" | "article";
+  author?: string;
+  siteName?: string;
 }
 
 const {
   title,
   description = "A tech & art blog",
   image = "/blog/favicon.svg",
+  ogType = "website",
+  author = "Martin Tomek",
+  siteName = "Martin Tomek Blog",
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -35,10 +41,12 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="author" content={author} />
     <link rel="canonical" href={canonicalURL} />
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content={siteName} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={new URL(image, Astro.site)} />
@@ -47,6 +55,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={new URL(image, Astro.site)} />
+    <slot name="head" />
   </head>
   <body class="min-h-dvh flex flex-col bg-white text-black">
     <Header />

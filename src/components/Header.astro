@@ -2,8 +2,7 @@
 const navLinks = [
   { href: "/blog/", label: "Home" },
   { href: "/blog/about/", label: "About" },
-  { href: "/blog/tags/", label: "Tags" },
-  { href: "/blog/rss.xml", label: "RSS" },
+  { href: "/blog/newsletter/", label: "Newsletter" },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -14,7 +13,7 @@ const currentPath = Astro.url.pathname;
     <a href="/blog/" class="text-lg font-bold uppercase tracking-tight">
       Blog
     </a>
-    <ul class="flex items-center gap-6">
+    <ul class="flex items-center gap-3 sm:gap-6">
       {navLinks.map(({ href, label }) => (
         <li>
           <a

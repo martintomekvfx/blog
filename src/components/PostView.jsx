@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import { db } from "../lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 import { evaluate } from "@mdx-js/mdx";
 import * as runtime from "react/jsx-runtime";
 import CodePlayground from "./CodePlayground.jsx";
@@ -62,6 +69,7 @@ export default function PostView({ slug }) {
   const [notFound, setNotFound] = useState(false);
   const [MdxContent, setMdxContent] = useState(null);
   const [mdxError, setMdxError] = useState("");
+  const [relatedPosts, setRelatedPosts] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +80,7 @@ export default function PostView({ slug }) {
       setPost(null);
       setMdxContent(null);
       setMdxError("");
+      setRelatedPosts([]);
 
       try {
         const snap = await getDoc(doc(db, "posts", slug));
@@ -82,6 +91,7 @@ export default function PostView({ slug }) {
           } else {
             const normalizedSource = normalizeMdxSource(data.content || "");
             let compiled = null;
+            let related = [];
 
             try {
               const module = await evaluate(normalizedSource, {
@@ -95,11 +105,37 @@ export default function PostView({ slug }) {
               }
             }
 
+            try {
+              const q = query(collection(db, "posts"), where("draft", "==", false));
+              const relatedSnap = await getDocs(q);
+              const currentTags = Array.isArray(data.tags) ? data.tags : [];
+
+              related = relatedSnap.docs
+                .map((d) => ({ id: d.id, ...d.data() }))
+                .filter((candidate) => candidate.id !== slug)
+                .map((candidate) => {
+                  const candidateTags = Array.isArray(candidate.tags) ? candidate.tags : [];
+                  const score = candidateTags.filter((tag) => currentTags.includes(tag)).length;
+                  return { ...candidate, _score: score };
+                })
+                .filter((candidate) => candidate._score > 0)
+                .sort((a, b) => {
+                  if (b._score !== a._score) return b._score - a._score;
+                  const aTime = Date.parse(a.pubDate || "");
+                  const bTime = Date.parse(b.pubDate || "");
+                  return (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
+                })
+                .slice(0, 3);
+            } catch {
+              related = [];
+            }
+
             if (!cancelled) {
               setPost(data);
               if (compiled) {
                 setMdxContent(() => compiled);
               }
+              setRelatedPosts(related);
             }
           }
         } else {
@@ -169,7 +205,7 @@ export default function PostView({ slug }) {
             {post.tags.map((tag) => (
               <a
                 key={tag}
-                href={`/blog/tags/${tag}/`}
+                href={`/blog/?tag=${encodeURIComponent(tag)}`}
                 className="text-xs border border-black px-2 py-0.5 hover:bg-black hover:text-white transition-colors duration-100"
               >
                 {tag}
@@ -189,6 +225,29 @@ export default function PostView({ slug }) {
         </div>
       ) : (
         <p className="opacity-60">Rendering post...</p>
+      )}
+
+      {relatedPosts.length > 0 && (
+        <section className="mt-12 border-t border-black/20 pt-8">
+          <h2 className="text-xl font-bold uppercase tracking-[0.06em] mb-4">Related articles</h2>
+          <div>
+            {relatedPosts.map((related) => (
+              <article key={related.id} className="border-b border-black/20 py-4">
+                <a href={`/blog/posts/${related.id}/`} className="group block">
+                  <h3 className="text-lg font-bold group-hover:underline underline-offset-4">
+                    {related.title}
+                  </h3>
+                  <p className="text-xs uppercase tracking-[0.08em] opacity-60 mt-1">
+                    {formatDate(related.pubDate)}
+                  </p>
+                  {related.description && (
+                    <p className="mt-2 text-sm opacity-80 text-pretty">{related.description}</p>
+                  )}
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
       )}
     </article>
   );

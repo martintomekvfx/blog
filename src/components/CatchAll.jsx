@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import PostView from "./PostView.jsx";
-import TagsView from "./TagsView.jsx";
 
 export default function CatchAll() {
   const [route, setRoute] = useState(null);
@@ -13,7 +12,8 @@ export default function CatchAll() {
     if (postMatch) {
       setRoute({ type: "post", slug: decodeURIComponent(postMatch[1]) });
     } else if (tagMatch) {
-      setRoute({ type: "tag", tag: decodeURIComponent(tagMatch[1]) });
+      const tag = decodeURIComponent(tagMatch[1]);
+      window.location.replace(`/blog/?tag=${encodeURIComponent(tag)}`);
     } else {
       setRoute({ type: "404" });
     }
@@ -23,10 +23,6 @@ export default function CatchAll() {
 
   if (route.type === "post") {
     return <PostView slug={route.slug} />;
-  }
-
-  if (route.type === "tag") {
-    return <TagsView tag={route.tag} />;
   }
 
   return (

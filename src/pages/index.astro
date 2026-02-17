@@ -1,12 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PostList from "../components/PostList.jsx";
-import PostCard from "../components/PostCard.astro";
-import { getCollection } from "astro:content";
-
-const staticPosts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
 ---
 
 <BaseLayout title="Blog" description="A tech & art blog">
@@ -16,30 +10,7 @@ const staticPosts = (await getCollection("posts", ({ data }) => !data.draft)).so
       Thoughts on tech, art, and everything in between.
     </p>
 
-    <p class="text-xs uppercase tracking-[0.12em] opacity-60 mb-4">Live posts from CMS</p>
+    <p class="text-xs uppercase tracking-[0.12em] opacity-60 mb-4">Live posts from Firebase CMS</p>
     <PostList client:load />
-
-    <div class="mt-14 border-t border-black/20 pt-10">
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-xl font-bold uppercase tracking-[0.06em]">MDX library</h2>
-        <span class="text-xs uppercase opacity-60">Static source posts</span>
-      </div>
-
-      {staticPosts.length === 0 ? (
-        <p class="opacity-60">No static MDX posts yet.</p>
-      ) : (
-        <div>
-          {staticPosts.map((post) => (
-            <PostCard
-              title={post.data.title}
-              description={post.data.description}
-              pubDate={post.data.pubDate}
-              tags={post.data.tags}
-              slug={post.id}
-            />
-          ))}
-        </div>
-      )}
-    </div>
   </section>
 </BaseLayout>

@@ -11,7 +11,7 @@ const { tags, small = false } = Astro.props;
   {tags.map((tag) => (
     <li>
       <a
-        href={`/blog/tags/${tag}/`}
+        href={`/blog/?tag=${encodeURIComponent(tag)}`}
         class:list={[
           "inline-block border border-black hover:bg-black hover:text-white transition-colors duration-100",
           small ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-sm",
