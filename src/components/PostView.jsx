@@ -3,6 +3,21 @@ import { db } from "../lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { marked } from "marked";
 
+function formatDate(value) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function getReadingTime(text) {
+  const words = (text || "").trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 220));
+}
+
 export default function PostView({ slug }) {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -47,16 +62,35 @@ export default function PostView({ slug }) {
   }
 
   const html = marked.parse(post.content || "");
+  const formattedDate = formatDate(post.pubDate);
+  const readingMinutes = getReadingTime(post.content);
 
   return (
-    <article>
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-balance mb-2">{post.title}</h1>
-        <time className="block text-sm opacity-60 tabular-nums">
-          {post.pubDate}
-        </time>
+    <article className="post-view pb-10">
+      <a
+        href="/blog/"
+        className="inline-block text-xs uppercase underline underline-offset-4 opacity-80 hover:opacity-100"
+      >
+        Back to home
+      </a>
+
+      <header className="mt-5 mb-10 border-y border-white py-8">
+        <p className="text-xs uppercase tracking-[0.14em] opacity-60 mb-4">Article</p>
+        <h1 className="text-4xl sm:text-5xl font-bold leading-tight text-balance mb-3">
+          {post.title}
+        </h1>
+        {post.description && (
+          <p className="text-base sm:text-lg text-pretty opacity-80 max-w-2xl">
+            {post.description}
+          </p>
+        )}
+        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs uppercase tracking-[0.12em] opacity-60">
+          <time className="tabular-nums">{formattedDate}</time>
+          <span>{readingMinutes} min read</span>
+        </div>
+
         {post.tags && post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3">
+          <div className="flex flex-wrap gap-2 mt-4">
             {post.tags.map((tag) => (
               <a
                 key={tag}
@@ -69,10 +103,7 @@ export default function PostView({ slug }) {
           </div>
         )}
       </header>
-      <div
-        className="prose prose-invert max-w-none"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      <div className="post-body prose prose-invert prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
     </article>
   );
 }

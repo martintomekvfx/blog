@@ -5,25 +5,30 @@ import {
   getDocs,
   query,
   where,
-  orderBy,
 } from "firebase/firestore";
 
 export default function PostList() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function load() {
       try {
-        const q = query(
-          collection(db, "posts"),
-          where("draft", "==", false),
-          orderBy("pubDate", "desc")
-        );
+        const q = query(collection(db, "posts"), where("draft", "==", false));
         const snap = await getDocs(q);
-        setPosts(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      } catch {
+        const publishedPosts = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => {
+            const aTime = Date.parse(a.pubDate || "");
+            const bTime = Date.parse(b.pubDate || "");
+            return (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
+          });
+        setPosts(publishedPosts);
+        setError("");
+      } catch (err) {
         setPosts([]);
+        setError("Could not load posts. " + (err?.message || ""));
       }
       setLoading(false);
     }
@@ -37,7 +42,7 @@ export default function PostList() {
   if (posts.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="opacity-60">No posts yet.</p>
+        <p className="opacity-60">{error || "No posts yet."}</p>
       </div>
     );
   }
