@@ -1,77 +1,22 @@
 import { useState, useEffect, useCallback } from "react";
+import { auth, db } from "../lib/firebase";
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  query,
+  orderBy,
+} from "firebase/firestore";
 
-const REPO_OWNER = "martintomekvfx";
-const REPO_NAME = "blog";
-const POSTS_PATH = "src/content/posts";
-const SESSION_KEY = "blog_admin_token";
-const PERSIST_KEY = "blog_admin_persist";
-
-// --- GitHub API ---
-
-async function ghFetch(path, token, opts = {}) {
-  const res = await fetch(
-    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}${path}`,
-    {
-      ...opts,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github.v3+json",
-        "Content-Type": "application/json",
-        ...opts.headers,
-      },
-    }
-  );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `GitHub API error: ${res.status}`);
-  }
-  return res.json();
-}
-
-// --- Frontmatter ---
-
-function parseFrontmatter(raw) {
-  const match = raw.match(/^---\n([\s\S]*?)\n---/);
-  if (!match) return { attrs: {}, body: raw };
-  const block = match[1];
-  const attrs = {};
-  for (const line of block.split("\n")) {
-    const idx = line.indexOf(":");
-    if (idx === -1) continue;
-    const key = line.slice(0, idx).trim();
-    let val = line.slice(idx + 1).trim();
-    if (val === "true") val = true;
-    else if (val === "false") val = false;
-    else if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
-    else if (val.startsWith("[")) {
-      try {
-        val = JSON.parse(val.replace(/'/g, '"'));
-      } catch {
-        val = val
-          .slice(1, -1)
-          .split(",")
-          .map((s) => s.trim().replace(/^["']|["']$/g, ""));
-      }
-    }
-    attrs[key] = val;
-  }
-  const body = raw.slice(match[0].length).trim();
-  return { attrs, body };
-}
-
-function buildFrontmatter(attrs, body) {
-  const lines = ["---"];
-  for (const [key, val] of Object.entries(attrs)) {
-    if (val === undefined || val === null) continue;
-    if (typeof val === "boolean") lines.push(`${key}: ${val}`);
-    else if (Array.isArray(val)) lines.push(`${key}: ${JSON.stringify(val)}`);
-    else lines.push(`${key}: "${val}"`);
-  }
-  lines.push("---");
-  lines.push("");
-  lines.push(body);
-  return lines.join("\n");
-}
+// --- Helpers ---
 
 function slugify(text) {
   return text
@@ -83,50 +28,11 @@ function slugify(text) {
     .replace(/^-|-$/g, "");
 }
 
-function toBase64(str) {
-  const bytes = new TextEncoder().encode(str);
-  let binary = "";
-  for (const b of bytes) binary += String.fromCharCode(b);
-  return btoa(binary);
-}
-
-function fromBase64(str) {
-  const cleaned = str.replace(/\n/g, "");
-  const binary = atob(cleaned);
-  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
-}
-
-// --- Token storage (sessionStorage default, localStorage opt-in) ---
-
-function getStoredToken() {
-  if (typeof window === "undefined") return "";
-  return (
-    sessionStorage.getItem(SESSION_KEY) ||
-    localStorage.getItem(SESSION_KEY) ||
-    ""
-  );
-}
-
-function storeToken(token, persist) {
-  sessionStorage.setItem(SESSION_KEY, token);
-  if (persist) {
-    localStorage.setItem(SESSION_KEY, token);
-    localStorage.setItem(PERSIST_KEY, "1");
-  }
-}
-
-function clearToken() {
-  sessionStorage.removeItem(SESSION_KEY);
-  localStorage.removeItem(SESSION_KEY);
-  localStorage.removeItem(PERSIST_KEY);
-}
-
 // --- Components ---
 
 function LoginForm({ onLogin }) {
-  const [token, setToken] = useState("");
-  const [persist, setPersist] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -135,16 +41,10 @@ function LoginForm({ onLogin }) {
     setLoading(true);
     setError("");
     try {
-      const user = await ghFetch("", token.trim());
-      // verify this token has access to the repo
-      if (!user.permissions?.push && !user.permissions?.admin) {
-        // for fine-grained tokens, permissions may not be on repo object
-        // just verify we can list contents
-        await ghFetch(`/contents/${POSTS_PATH}`, token.trim());
-      }
-      onLogin(token.trim(), persist);
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      onLogin();
     } catch {
-      setError("Invalid token or no access to this repo.");
+      setError("Invalid email or password.");
     }
     setLoading(false);
   }
@@ -153,62 +53,52 @@ function LoginForm({ onLogin }) {
     <div className="max-w-md mx-auto mt-16">
       <h1 className="text-2xl font-bold uppercase mb-8">Admin</h1>
       <form onSubmit={handleSubmit}>
-        <label className="block text-sm uppercase mb-2" htmlFor="token">
-          GitHub Personal Access Token
+        <label className="block text-sm uppercase mb-2" htmlFor="email">
+          Email
         </label>
         <input
-          id="token"
-          type="password"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          placeholder="github_pat_..."
-          autoComplete="off"
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
           className="w-full bg-black text-white border border-white p-3 text-sm focus:outline-none mb-4"
         />
-        <label className="flex items-center gap-2 mb-4 text-sm cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={persist}
-            onChange={(e) => setPersist(e.target.checked)}
-            className="accent-white"
-          />
-          Remember me
+        <label className="block text-sm uppercase mb-2" htmlFor="password">
+          Password
         </label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
+          className="w-full bg-black text-white border border-white p-3 text-sm focus:outline-none mb-4"
+        />
         {error && (
           <p className="mb-4 text-sm border border-white p-2">{error}</p>
         )}
         <button
           type="submit"
-          disabled={loading || !token.trim()}
+          disabled={loading || !email.trim() || !password}
           className="w-full border border-white px-4 py-2 text-sm uppercase font-medium bg-white text-black hover:bg-black hover:text-white transition-colors duration-100 disabled:opacity-40"
         >
-          {loading ? "Verifying..." : "Log in"}
+          {loading ? "Signing in..." : "Log in"}
         </button>
       </form>
-      <div className="mt-8 text-xs opacity-60 space-y-2">
-        <p>
-          Use a fine-grained personal access token for best security:
-        </p>
-        <ol className="list-decimal pl-4 space-y-1">
-          <li>
-            GitHub Settings &gt; Developer settings &gt; Fine-grained tokens
-          </li>
-          <li>Repository access: Only select &quot;{REPO_NAME}&quot;</li>
-          <li>Permissions: Contents (Read and write)</li>
-        </ol>
-        <p>Token never leaves your browser. Stored in {persist ? "localStorage" : "sessionStorage"} only.</p>
-      </div>
     </div>
   );
 }
 
-function PostEditor({ post, token, onSave, onCancel }) {
+function PostEditor({ post, onSave, onCancel }) {
   const isNew = !post;
   const [title, setTitle] = useState(post?.title || "");
   const [description, setDescription] = useState(post?.description || "");
-  const [tags, setTags] = useState(post?.tagsRaw || "");
+  const [tags, setTags] = useState(
+    post?.tags ? post.tags.join(", ") : ""
+  );
   const [draft, setDraft] = useState(post?.draft ?? true);
-  const [body, setBody] = useState(post?.body || "\nWrite your post here.\n");
+  const [body, setBody] = useState(post?.content || "\nWrite your post here.\n");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -220,43 +110,23 @@ function PostEditor({ post, token, onSave, onCancel }) {
     setSaving(true);
     setError("");
 
-    const slug = isNew ? slugify(title) : post.name.replace(/\.(md|mdx)$/, "");
-    const filename = isNew ? `${slug}.md` : post.name;
-    const path = `${POSTS_PATH}/${filename}`;
-
+    const slug = isNew ? slugify(title) : post.id;
     const tagList = tags
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean);
 
-    const attrs = {
+    const data = {
       title: title.trim(),
       description: description.trim(),
       pubDate: post?.pubDate || new Date().toISOString().split("T")[0],
       tags: tagList,
       draft,
+      content: body.trim(),
     };
 
-    const content = buildFrontmatter(attrs, body.trim());
-
     try {
-      let sha;
-      if (!isNew) {
-        const existing = await ghFetch(`/contents/${path}`, token);
-        sha = existing.sha;
-      }
-
-      await ghFetch(`/contents/${path}`, token, {
-        method: "PUT",
-        body: JSON.stringify({
-          message: isNew
-            ? `blog: create ${filename}`
-            : `blog: update ${filename}`,
-          content: toBase64(content),
-          ...(sha ? { sha } : {}),
-        }),
-      });
-
+      await setDoc(doc(db, "posts", slug), data);
       onSave();
     } catch (err) {
       setError(err.message);
@@ -323,7 +193,9 @@ function PostEditor({ post, token, onSave, onCancel }) {
         </label>
 
         <div>
-          <label className="block text-xs uppercase mb-1">Content (Markdown)</label>
+          <label className="block text-xs uppercase mb-1">
+            Content (Markdown)
+          </label>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
@@ -349,25 +221,17 @@ function PostEditor({ post, token, onSave, onCancel }) {
   );
 }
 
-function PostRow({ post, token, onRefresh, onEdit }) {
+function PostRow({ post, onRefresh, onEdit }) {
   const [busy, setBusy] = useState(false);
 
   async function toggleDraft() {
     setBusy(true);
     try {
-      const file = await ghFetch(`/contents/${post.path}`, token);
-      const raw = fromBase64(file.content);
-      const { attrs, body } = parseFrontmatter(raw);
-      attrs.draft = !attrs.draft;
-      const updated = buildFrontmatter(attrs, body);
-      await ghFetch(`/contents/${post.path}`, token, {
-        method: "PUT",
-        body: JSON.stringify({
-          message: `blog: ${attrs.draft ? "unpublish" : "publish"} ${post.name}`,
-          content: toBase64(updated),
-          sha: file.sha,
-        }),
-      });
+      const ref = doc(db, "posts", post.id);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        await setDoc(ref, { ...snap.data(), draft: !post.draft });
+      }
       onRefresh();
     } catch (err) {
       alert("Error: " + err.message);
@@ -379,14 +243,7 @@ function PostRow({ post, token, onRefresh, onEdit }) {
     if (!confirm(`Delete "${post.title}"?`)) return;
     setBusy(true);
     try {
-      const file = await ghFetch(`/contents/${post.path}`, token);
-      await ghFetch(`/contents/${post.path}`, token, {
-        method: "DELETE",
-        body: JSON.stringify({
-          message: `blog: delete ${post.name}`,
-          sha: file.sha,
-        }),
-      });
+      await deleteDoc(doc(db, "posts", post.id));
       onRefresh();
     } catch (err) {
       alert("Error: " + err.message);
@@ -397,21 +254,17 @@ function PostRow({ post, token, onRefresh, onEdit }) {
   async function moveDate(days) {
     setBusy(true);
     try {
-      const file = await ghFetch(`/contents/${post.path}`, token);
-      const raw = fromBase64(file.content);
-      const { attrs, body } = parseFrontmatter(raw);
-      const d = new Date(attrs.pubDate);
-      d.setDate(d.getDate() + days);
-      attrs.pubDate = d.toISOString().split("T")[0];
-      const updated = buildFrontmatter(attrs, body);
-      await ghFetch(`/contents/${post.path}`, token, {
-        method: "PUT",
-        body: JSON.stringify({
-          message: `blog: reorder ${post.name}`,
-          content: toBase64(updated),
-          sha: file.sha,
-        }),
-      });
+      const ref = doc(db, "posts", post.id);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data();
+        const d = new Date(data.pubDate);
+        d.setDate(d.getDate() + days);
+        await setDoc(ref, {
+          ...data,
+          pubDate: d.toISOString().split("T")[0],
+        });
+      }
       onRefresh();
     } catch (err) {
       alert("Error: " + err.message);
@@ -433,7 +286,7 @@ function PostRow({ post, token, onRefresh, onEdit }) {
           )}
         </div>
         <div className="text-xs opacity-60 mt-1 tabular-nums">
-          {post.pubDate} &middot; {post.name}
+          {post.pubDate} &middot; {post.id}
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -479,44 +332,26 @@ function PostRow({ post, token, onRefresh, onEdit }) {
   );
 }
 
-function Dashboard({ token, onLogout }) {
+function Dashboard({ onLogout }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [view, setView] = useState("list"); // list | new | edit
+  const [view, setView] = useState("list");
   const [editingPost, setEditingPost] = useState(null);
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const files = await ghFetch(`/contents/${POSTS_PATH}`, token);
-      const postList = [];
-      for (const file of files) {
-        if (!file.name.endsWith(".md") && !file.name.endsWith(".mdx")) continue;
-        const content = await ghFetch(`/contents/${file.path}`, token);
-        const raw = fromBase64(content.content);
-        const { attrs, body } = parseFrontmatter(raw);
-        postList.push({
-          name: file.name,
-          path: file.path,
-          sha: content.sha,
-          title: attrs.title || file.name,
-          description: attrs.description || "",
-          pubDate: attrs.pubDate || "unknown",
-          draft: attrs.draft === true,
-          tags: attrs.tags || [],
-          tagsRaw: Array.isArray(attrs.tags) ? attrs.tags.join(", ") : "",
-          body,
-        });
-      }
-      postList.sort((a, b) => (b.pubDate > a.pubDate ? 1 : -1));
+      const q = query(collection(db, "posts"), orderBy("pubDate", "desc"));
+      const snap = await getDocs(q);
+      const postList = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setPosts(postList);
     } catch (err) {
       setError(err.message);
     }
     setLoading(false);
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchPosts();
@@ -535,11 +370,7 @@ function Dashboard({ token, onLogout }) {
 
   if (view === "new") {
     return (
-      <PostEditor
-        token={token}
-        onSave={handleSaved}
-        onCancel={() => setView("list")}
-      />
+      <PostEditor onSave={handleSaved} onCancel={() => setView("list")} />
     );
   }
 
@@ -547,7 +378,6 @@ function Dashboard({ token, onLogout }) {
     return (
       <PostEditor
         post={editingPost}
-        token={token}
         onSave={handleSaved}
         onCancel={() => {
           setView("list");
@@ -589,9 +419,8 @@ function Dashboard({ token, onLogout }) {
         <div className="space-y-2">
           {posts.map((post) => (
             <PostRow
-              key={post.path}
+              key={post.id}
               post={post}
-              token={token}
               onRefresh={fetchPosts}
               onEdit={() => handleEdit(post)}
             />
@@ -600,25 +429,32 @@ function Dashboard({ token, onLogout }) {
       )}
 
       <p className="mt-8 text-xs opacity-60">
-        Changes commit directly to the repo. Deploy triggers automatically.
+        Changes are saved instantly to Firestore. No rebuild needed.
       </p>
     </div>
   );
 }
 
 export default function Admin() {
-  const [token, setToken] = useState(() => getStoredToken());
+  const [user, setUser] = useState(undefined);
 
-  function handleLogin(t, persist) {
-    storeToken(t, persist);
-    setToken(t);
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u ?? null));
+    return unsub;
+  }, []);
+
+  async function handleLogout() {
+    await signOut(auth);
   }
 
-  function handleLogout() {
-    clearToken();
-    setToken("");
+  if (user === undefined) {
+    return (
+      <div className="max-w-md mx-auto mt-16">
+        <p className="opacity-60">Loading...</p>
+      </div>
+    );
   }
 
-  if (!token) return <LoginForm onLogin={handleLogin} />;
-  return <Dashboard token={token} onLogout={handleLogout} />;
+  if (!user) return <LoginForm onLogin={() => {}} />;
+  return <Dashboard onLogout={handleLogout} />;
 }

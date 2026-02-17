@@ -1,43 +1,8 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { getCollection } from "astro:content";
-
-const allPosts = await getCollection("posts", ({ data }) => {
-  return import.meta.env.PROD ? !data.draft : true;
-});
-
-const tagCounts = new Map<string, number>();
-for (const post of allPosts) {
-  for (const tag of post.data.tags) {
-    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
-  }
-}
-
-const sortedTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]);
+import TagsView from "../../components/TagsView.jsx";
 ---
 
 <BaseLayout title="Tags | Blog" description="Browse posts by tag">
-  <section>
-    <h1 class="text-3xl font-bold text-balance mb-8">Tags</h1>
-
-    {sortedTags.length === 0 ? (
-      <p class="opacity-60">No tags yet.</p>
-    ) : (
-      <ul class="flex flex-wrap gap-2" role="list">
-        {sortedTags.map(([tag, count]) => (
-          <li>
-            <a
-              href={`/blog/tags/${tag}/`}
-              class="inline-flex items-center gap-1.5 border border-white px-3 py-1.5 text-sm hover:bg-white hover:text-black transition-colors duration-100"
-            >
-              {tag}
-              <span class="text-xs opacity-60 tabular-nums">
-                {count}
-              </span>
-            </a>
-          </li>
-        ))}
-      </ul>
-    )}
-  </section>
+  <TagsView client:load />
 </BaseLayout>

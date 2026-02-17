@@ -1,15 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import PostCard from "../components/PostCard.astro";
-import { getCollection } from "astro:content";
-
-const allPosts = await getCollection("posts", ({ data }) => {
-  return import.meta.env.PROD ? !data.draft : true;
-});
-
-const posts = allPosts.sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
+import PostList from "../components/PostList.jsx";
 ---
 
 <BaseLayout title="Blog" description="A tech & art blog">
@@ -19,29 +10,6 @@ const posts = allPosts.sort(
       Thoughts on tech, art, and everything in between.
     </p>
 
-    {posts.length === 0 ? (
-      <div class="text-center py-16">
-        <p class="opacity-60 mb-4">No posts yet.</p>
-        <a
-          href="https://github.com/martintomekvfx/blog"
-          class="text-sm underline underline-offset-4"
-        >
-          Create your first post
-        </a>
-      </div>
-    ) : (
-      <div>
-        {posts.map((post) => (
-          <PostCard
-            title={post.data.title}
-            description={post.data.description}
-            pubDate={post.data.pubDate}
-            tags={post.data.tags}
-            slug={post.id}
-            heroImage={post.data.heroImage}
-          />
-        ))}
-      </div>
-    )}
+    <PostList client:load />
   </section>
 </BaseLayout>
