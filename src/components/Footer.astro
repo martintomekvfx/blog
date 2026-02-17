@@ -1,42 +1,28 @@
 ---
 const buttondownUsername = import.meta.env.PUBLIC_BUTTONDOWN_USERNAME || "tomek";
 const buttondownAction = `https://buttondown.com/api/emails/embed-subscribe/${buttondownUsername}`;
-const year = new Date().getFullYear();
 ---
 
-<footer class="border-t border-black/10 pt-12 pb-8 mt-16">
+<footer class="border-t border-black/10 pt-12 pb-10 mt-16">
   <div class="max-w-3xl mx-auto px-4 sm:px-6">
-    <div class="mb-10">
-      <p class="text-sm font-medium mb-3">Stay updated</p>
-      <p class="text-sm opacity-50 mb-5 max-w-sm">New writing on art, VFX, and open tools — sent when there is something worth reading.</p>
-      <form
-        action={buttondownAction}
-        method="post"
-        class="embeddable-buttondown-form flex gap-2 max-w-sm"
-        referrerpolicy="unsafe-url"
-      >
-        <input
-          type="email"
-          name="email"
-          required
-          placeholder="your@email.com"
-          class="flex-1 border-b border-black/30 bg-transparent py-1.5 text-sm focus:outline-none focus:border-black placeholder:opacity-30 transition-colors"
-        />
-        <input
-          type="submit"
-          value="Subscribe"
-          class="text-sm opacity-60 hover:opacity-100 cursor-pointer transition-opacity shrink-0"
-        />
-      </form>
-    </div>
-
-    <div class="flex items-center justify-between">
-      <nav class="flex gap-5">
-        <a href="https://github.com/martintomekvfx" target="_blank" rel="noopener noreferrer" class="text-sm opacity-40 hover:opacity-100 transition-opacity">GitHub</a>
-        <a href="/blog/rss.xml" class="text-sm opacity-40 hover:opacity-100 transition-opacity">RSS</a>
-        <a href="mailto:martin.tomek@famu.cz" class="text-sm opacity-40 hover:opacity-100 transition-opacity">Email</a>
-      </nav>
-      <p class="text-sm opacity-25">{year}</p>
-    </div>
+    <form
+      action={buttondownAction}
+      method="post"
+      class="embeddable-buttondown-form flex gap-3 max-w-sm"
+      referrerpolicy="unsafe-url"
+    >
+      <input
+        type="email"
+        name="email"
+        required
+        placeholder="your@email.com"
+        class="flex-1 border-b border-black/30 bg-transparent py-1.5 text-sm focus:outline-none focus:border-black placeholder:opacity-30 transition-colors"
+      />
+      <input
+        type="submit"
+        value="Subscribe"
+        class="text-sm opacity-50 hover:opacity-100 cursor-pointer transition-opacity shrink-0"
+      />
+    </form>
   </div>
 </footer>

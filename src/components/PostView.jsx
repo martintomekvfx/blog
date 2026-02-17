@@ -72,7 +72,6 @@ export default function PostView({ slug }) {
       setPost(null);
       setMdxContent(null);
       setMdxError("");
-      setRelatedPosts([]);
 
       try {
         const snap = await getDoc(doc(db, "posts", slug));
