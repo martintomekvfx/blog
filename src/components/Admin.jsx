@@ -148,6 +148,13 @@ open-source tools, and tactical urbanism.
 - No summary paragraph at the end
 - Tone: honest, observational, a bit dry
 
+--- FORMAT RULES (STRICT) ---
+- NO bullet points or numbered lists — use prose paragraphs instead
+- NO em dashes (—) — use commas, colons, or new sentences
+- NO emoji or icons of any kind
+- NO bold text for decoration — use bold only for code/tool names if needed
+- NO blockquote walls — one short blockquote maximum per post
+
 --- POST TYPES & LENGTH ---
 Field note      150–400 words   A specific moment, observation, or finding
 Process log     300–700 words   Step-by-step of how something was made

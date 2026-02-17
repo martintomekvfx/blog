@@ -6,65 +6,77 @@ tags: [process, code, tools, behind-the-scenes]
 draft: false
 ---
 
-I wanted a proper writing space. Not a static CMS I'd fight with, not another Medium account. A real system — mine — with a database, a browser-based editor, automatic deployment, and a newsletter that sends itself.
+I already have a portfolio. But the portfolio is an archive of finished things. I wanted a place for the rest: working processes, failed attempts, tools I have been using, thoughts that do not belong anywhere else. Something closer to a notebook than a gallery. So I built this site.
 
-I built it in two evenings using Windsurf.
+## The idea
 
-## What I wanted
+I was looking at benji.org and emilkowal.ski. Both do the same thing: get out of the way. Clean type, no decoration, content is the only thing on the page. That was the aesthetic I wanted to copy.
 
-A blog that:
-
-- Looks clean and minimal — I was looking at [benji.org](https://benji.org) and [emilkowal.ski](https://emilkowal.ski)
-- Has a real admin panel I can write in from any browser
-- Stores posts in a database, not files committed to git
-- Deploys automatically to GitHub Pages on push
-- Sends a newsletter when I publish a new post
-- Costs nothing to run
+The requirements were simple. A real admin panel I can open from any browser and write in. Posts stored in a database, not committed to git as files. Automatic deploy to GitHub Pages on push. A newsletter that goes out when I publish. Nothing to run, nothing to pay monthly.
 
 ## The stack
 
-- **Astro** — static site generator, fast builds, good component model
-- **React** — interactive components: post list, post viewer, admin panel
-- **Firebase Firestore** — the database; free tier handles everything at this scale
-- **Firebase Auth** — single-user authentication for the admin
-- **CodeMirror** — markdown editor embedded in the admin panel
-- **MDX** — posts can contain embedded React components like `<SquarePulse />` and `<CodePlayground />`
-- **Tailwind CSS** — utility styling, no custom CSS except font declarations
-- **Geist** — font from Vercel, the Sans and Mono weights; Pixel variant available for glitch effects
-- **GitHub Pages** — free hosting, deploys on push to `main`
-- **GitHub Actions** — CI/CD pipeline; also handles newsletter dispatch via the Buttondown API
-- **Buttondown** — newsletter service, $0 for under 100 subscribers
+The site is built with Astro, with React for the interactive parts: the post list, the post viewer, and the admin panel. Posts live in Firebase Firestore. The admin uses Firebase Auth for single-user login. The editor inside the admin is CodeMirror with markdown support.
 
-The repository is at [github.com/martintomekvfx/blog](https://github.com/martintomekvfx/blog).
+Posts are written in MDX, which means they can embed custom React components directly in the content. The styling is Tailwind with Geist font from Vercel. Deployment is GitHub Pages, with GitHub Actions handling both CI/CD and newsletter dispatch.
 
-## How Windsurf works
+Here is the Firestore query that generates post pages at build time:
 
-Windsurf is an IDE with an embedded AI agent called Cascade. It reads your files, runs terminal commands, edits code directly, and executes git operations. You describe what you want in plain language. It builds it.
+```javascript
+const snap = await getDocs(
+  query(collection(db, "posts"), where("draft", "==", false))
+);
 
-The difference from pasting into ChatGPT: it doesn't show you code to copy. It writes the code into the files. It can read errors, fix them, and push the result.
+return snap.docs.map((docSnap) => ({
+  params: { slug: docSnap.id },
+  props: { slug: docSnap.id, ...docSnap.data() },
+}));
+```
 
-I would say something like: *"Add a settings panel to the admin where I can store the GitHub dispatch token."* Cascade would read `Admin.jsx`, write the component, apply the edit, and confirm. If the build failed, it would read the error and fix it.
+When a post is published, the admin triggers a GitHub Actions workflow via the GitHub API. The workflow fetches the latest post from Firestore and sends the newsletter through Buttondown.
 
-For this project I described roughly what I wanted, iterated on the design by referencing real sites, and fixed bugs by pasting error messages directly into the chat.
+```javascript
+await fetch(
+  `https://api.github.com/repos/${owner}/${repo}/dispatches`,
+  {
+    method: "POST",
+    headers: {
+      Authorization: `token ${ghToken}`,
+      Accept: "application/vnd.github.v3+json",
+    },
+    body: JSON.stringify({ event_type: "publish-post" }),
+  }
+);
+```
 
-## What worked well
+For the newsletter I am using Buttondown for now. It was the fastest thing to wire up and the free tier covers everything at this scale. The plan is to eventually move to a fully self-hosted setup, but Buttondown made sense to start with.
 
-The admin panel came together quickly. Firebase Auth for login, Firestore for storage, CodeMirror for editing. The GitHub Actions workflow for newsletter dispatch works like this: the admin triggers it via the GitHub API when a post is published, the workflow fetches the latest post from Firestore, formats an email, and sends it via Buttondown. One click publish → newsletter out.
+## Vibe coding
 
-Design iteration was fast. I said *"redesign the homepage to match benji.org"* and the components were rewritten in a few minutes. Then *"use Geist font"*, and the npm package was installed, font files copied to public, and CSS updated.
+There is a term going around: vibe coding. The idea is that you describe what you want, an AI builds it, you iterate. You do not write code so much as direct it.
 
-Debugging went faster than usual. A React hooks ordering bug (error #310) that would have taken me an hour to track down was diagnosed and fixed in one exchange.
+I have mixed feelings about the framing. It makes the process sound casual in a way that undersells the actual work. When something breaks, you still have to understand why. When the AI proposes something wrong, you have to recognize it. The gap between idea and working implementation is smaller, but the gap is not zero.
 
-## What didn't work
+For this blog, I would describe something like: add a settings panel to the admin where I can store the GitHub dispatch token. Cascade would read Admin.jsx, write the component, apply the edit, confirm. If the build failed, it would read the error and fix it. The conversation was about intent rather than syntax.
 
-Twitter's API is now credit-based. Even on a brand new developer account, the first API call returned `CreditsDepleted`. The auto-tweet feature is technically built and wired — it's just waiting for the API situation to resolve. The newsletter still works fine.
+The honest version is that I spent most of the time deciding what I wanted, not writing code. That is a different kind of work, but it is still work.
 
-Some things required more back and forth than expected. The admin dark mode was broken (white text on white background). Firestore REST API queries needed the API key as a query param, not a header. These are the kind of details that don't make it into tutorials.
+## What worked
+
+The admin panel came together quickly. Firebase Auth, Firestore storage, CodeMirror editor, all wired together in one session. The newsletter pipeline works end to end: write, hit publish, newsletter out. No manual steps.
+
+Debugging was faster than usual. A React hooks ordering error that would have taken me an hour to trace was diagnosed and fixed in one exchange. A Firestore REST API query that silently failed because the API key needed to be a query parameter rather than a header took about five minutes.
+
+## What did not work
+
+Twitter's API is now credit-based. Even on a new developer account, the first API call returned `CreditsDepleted`. The auto-tweet feature is built and wired. It is waiting for the API situation to resolve.
+
+The admin dark mode was broken for a while, white text on a white background. These are the kinds of details that do not appear in tutorials.
 
 ## The result
 
-The blog runs on €0/month. The admin panel is at `/blog/admin/`, behind Firebase Auth. I write in a full-screen CodeMirror editor, hit Publish, and a newsletter goes out automatically.
+The blog runs at zero monthly cost. The admin is at `/blog/admin/`, behind Firebase Auth. I write in a full-screen CodeMirror editor, hit Publish, and a newsletter goes out automatically.
 
-The font is Geist. The design is minimal enough that content is the only thing on the page.
+The font is Geist. The design is minimal enough that the content is the only thing on the page.
 
-I think that's what the tool should do.
+The repository is at [github.com/martintomekvfx/blog](https://github.com/martintomekvfx/blog).
