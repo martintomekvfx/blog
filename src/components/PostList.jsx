@@ -169,6 +169,8 @@ export default function PostList() {
     );
   }
 
+  const hasFilters = search.trim() || yearFilter || tagFilter;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -176,130 +178,143 @@ export default function PostList() {
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <motion.div
-        className="mb-6 space-y-3"
+        className="mb-8 space-y-3"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
       >
-        <label className="block">
-          <span className="sr-only">Search posts</span>
+        <div className="relative">
           <input
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search posts, tags, topics..."
-            className="w-full border border-black bg-white px-3 py-2 text-sm focus:outline-none"
+            placeholder="Search posts, tags, topics…"
+            className="w-full border-b border-black/30 bg-transparent pb-2 pt-1 text-sm focus:outline-none focus:border-black placeholder:opacity-30 transition-colors"
           />
-        </label>
-
-        {years.length > 1 && (
-          <div className="flex flex-wrap items-center gap-2">
+          {search && (
             <button
               type="button"
-              onClick={() => setYearFilter("")}
-              className={`text-xs border px-2 py-0.5 transition-colors duration-100 ${
-                yearFilter === ""
-                  ? "border-black bg-black text-white"
-                  : "border-black hover:bg-black hover:text-white"
-              }`}
+              onClick={() => setSearch("")}
+              className="absolute right-0 top-1 text-xs opacity-40 hover:opacity-80"
             >
-              All years
+              ✕
             </button>
-            {years.map((year) => (
-              <button
-                key={year}
-                type="button"
-                onClick={() => setYearFilter(year)}
-                className={`text-xs border px-2 py-0.5 transition-colors duration-100 ${
-                  yearFilter === year
-                    ? "border-black bg-black text-white"
-                    : "border-black hover:bg-black hover:text-white"
-                }`}
-              >
-                {year}
-              </button>
-            ))}
-          </div>
-        )}
+          )}
+        </div>
 
-        {tags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          <button
+            type="button"
+            onClick={() => { setTagFilter(""); setYearFilter(""); }}
+            className={`text-[11px] uppercase tracking-[0.1em] border px-2 py-0.5 transition-colors duration-100 ${
+              !tagFilter && !yearFilter
+                ? "border-black bg-black text-white"
+                : "border-black/30 hover:border-black hover:bg-black hover:text-white"
+            }`}
+          >
+            All
+          </button>
+          {tags.map(([tag, count]) => (
             <button
+              key={tag}
               type="button"
-              onClick={() => setTagFilter("")}
-              className={`text-xs border px-2 py-0.5 transition-colors duration-100 ${
-                tagFilter === ""
+              onClick={() => setTagFilter(tagFilter === tag ? "" : tag)}
+              className={`text-[11px] uppercase tracking-[0.1em] border px-2 py-0.5 transition-colors duration-100 ${
+                tagFilter === tag
                   ? "border-black bg-black text-white"
-                  : "border-black hover:bg-black hover:text-white"
+                  : "border-black/30 hover:border-black hover:bg-black hover:text-white"
               }`}
             >
-              All topics
+              {tag} <span className="opacity-50">({count})</span>
             </button>
-            {tags.map(([tag, count]) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => setTagFilter(tag)}
-                className={`text-xs border px-2 py-0.5 transition-colors duration-100 ${
-                  tagFilter === tag
-                    ? "border-black bg-black text-white"
-                    : "border-black hover:bg-black hover:text-white"
-                }`}
-              >
-                {tag} <span className="opacity-60">({count})</span>
-              </button>
-            ))}
-          </div>
-        )}
+          ))}
+          {years.length > 1 && years.map((year) => (
+            <button
+              key={year}
+              type="button"
+              onClick={() => setYearFilter(yearFilter === year ? "" : year)}
+              className={`text-[11px] uppercase tracking-[0.1em] border px-2 py-0.5 transition-colors duration-100 ${
+                yearFilter === year
+                  ? "border-black bg-black text-white"
+                  : "border-black/30 hover:border-black hover:bg-black hover:text-white"
+              }`}
+            >
+              {year}
+            </button>
+          ))}
+        </div>
       </motion.div>
 
       {filteredPosts.length === 0 ? (
-        <div className="text-center py-16 border-y border-black/20">
-          <p className="opacity-60">No posts match this filter.</p>
+        <div className="py-16 border-t border-black/10">
+          <p className="opacity-40 text-sm">No posts match this filter.</p>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={() => { setSearch(""); setTagFilter(""); setYearFilter(""); }}
+              className="mt-3 text-xs underline underline-offset-4 opacity-60 hover:opacity-100"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       ) : (
-        filteredPosts.map((post) => (
-          <motion.article
-            key={post.id}
-            className="border-b border-black/20 py-6"
-            variants={cardMotion}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.12 }}
-          >
-            <a
-              href={`/blog/posts/${post.id}/`}
-              className="block group"
+        <div className="border-t border-black/10">
+          {filteredPosts.map((post, index) => (
+            <motion.article
+              key={post.id}
+              className="group border-b border-black/10 py-7"
+              variants={cardMotion}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, amount: 0.08 }}
+              custom={index}
             >
-              <h2 className="text-xl font-bold text-balance group-hover:underline underline-offset-4">
-                {post.title}
-              </h2>
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs uppercase tracking-[0.08em] opacity-60">
-                <time className="tabular-nums">{formatDate(post.pubDate)}</time>
-                <span>{getReadingTime(post.content)} min read</span>
+              <div className="flex items-start justify-between gap-4">
+                <a href={`/blog/posts/${post.id}/`} className="flex-1 min-w-0">
+                  <h2 className="text-2xl font-bold leading-tight tracking-[-0.02em] group-hover:opacity-60 transition-opacity duration-200">
+                    {post.title}
+                  </h2>
+                  {post.description && (
+                    <p className="mt-2 text-sm opacity-50 leading-relaxed max-w-xl">
+                      {post.description}
+                    </p>
+                  )}
+                </a>
+                <a
+                  href={`/blog/posts/${post.id}/`}
+                  className="shrink-0 text-[11px] uppercase tracking-[0.1em] opacity-30 group-hover:opacity-70 transition-opacity duration-200 tabular-nums pt-1"
+                >
+                  {formatDate(post.pubDate)}
+                </a>
               </div>
-              {post.description && (
-                <p className="mt-2 text-pretty opacity-80">
-                  {post.description}
-                </p>
-              )}
-            </a>
-            {post.tags && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {post.tags.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => setTagFilter(tag)}
-                    className="text-xs border border-black px-2 py-0.5 hover:bg-black hover:text-white transition-colors duration-100"
-                  >
-                    {tag}
-                  </button>
-                ))}
+
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3">
+                <span className="text-[11px] uppercase tracking-[0.1em] opacity-30">
+                  {getReadingTime(post.content)} min read
+                </span>
+                {post.tags && post.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {post.tags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setTagFilter(tag)}
+                        className={`text-[11px] uppercase tracking-[0.08em] border px-2 py-0.5 transition-colors duration-100 ${
+                          tagFilter === tag
+                            ? "border-black bg-black text-white"
+                            : "border-black/20 hover:border-black hover:bg-black hover:text-white"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </motion.article>
-        ))
+            </motion.article>
+          ))}
+        </div>
       )}
     </motion.div>
   );

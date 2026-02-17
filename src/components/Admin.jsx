@@ -1,4 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import CodeMirror from "@uiw/react-codemirror";
+import { markdown } from "@codemirror/lang-markdown";
+import { EditorView } from "@codemirror/view";
 import { auth, db } from "../lib/firebase";
 import {
   signInWithEmailAndPassword,
@@ -107,6 +110,80 @@ function LoginForm({ onLogin }) {
   );
 }
 
+const cmTheme = EditorView.theme({
+  "&": {
+    background: "#0a0a0a",
+    color: "#e8e8e8",
+    fontSize: "13px",
+    fontFamily: '"Helvetica Neue", Helvetica, Arial, monospace',
+    height: "100%",
+  },
+  ".cm-content": { padding: "16px", caretColor: "#fff" },
+  ".cm-line": { lineHeight: "1.7" },
+  ".cm-cursor": { borderLeftColor: "#fff" },
+  ".cm-selectionBackground, ::selection": { background: "rgba(255,255,255,0.15) !important" },
+  ".cm-gutters": { background: "#0a0a0a", borderRight: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.2)" },
+  ".cm-activeLineGutter": { background: "rgba(255,255,255,0.04)" },
+  ".cm-activeLine": { background: "rgba(255,255,255,0.03)" },
+  ".cm-scroller": { overflow: "auto" },
+});
+
+const GUIDE_CONTENT = `# Post Writing Guide
+
+## Voice
+- First person, direct, no fluff
+- Czech for personal/reflective, English for technical
+- Short sentences, concrete observations
+- Process-forward: show the thinking
+
+## Structure
+\`\`\`
+title: Short, specific title
+description: One sentence.
+pubDate: YYYY-MM-DD
+tags: [process, urbanism, vfx, code, teaching]
+draft: true
+\`\`\`
+
+## Tags
+process · urbanism · vfx · code · teaching
+research · game · analog · installation · palmovka
+
+## Embeds
+\`<SquarePulse title="Signal" caption="What this marks." />\`
+\`<CodePlayground code={\`...\`} language="javascript" />\`
+
+## Length
+- Field note: 150–400 words
+- Process log: 300–700 words
+- Research: 500–1200 words
+
+## Good openers
+"The square is 80×80 cm. I placed it and left."
+"Three hours in, the projector died."
+"This tool does one thing: ..."
+
+## Avoid
+- "In this post I will explore..."
+- "I am excited to share..."
+- Summarizing at the end`;
+
+function GuidePanel({ onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-end p-4 pointer-events-none">
+      <div className="pointer-events-auto w-full max-w-sm bg-black border border-white/20 shadow-2xl flex flex-col" style={{ maxHeight: "calc(100vh - 2rem)" }}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+          <span className="text-[11px] uppercase tracking-[0.14em] opacity-60">Writing Guide</span>
+          <button onClick={onClose} className="text-xs opacity-40 hover:opacity-100">✕</button>
+        </div>
+        <div className="overflow-y-auto flex-1 p-4">
+          <pre className="text-[12px] leading-relaxed opacity-70 whitespace-pre-wrap font-sans">{GUIDE_CONTENT}</pre>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PostEditor({ post, onSave, onCancel }) {
   const isNew = !post;
   const [title, setTitle] = useState(post?.title || "");
@@ -118,6 +195,8 @@ function PostEditor({ post, onSave, onCancel }) {
   const [body, setBody] = useState(post?.content || "\nWrite your post here.\n");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [showGuide, setShowGuide] = useState(false);
+  const [editorMode, setEditorMode] = useState("write");
 
   function insertSquareTemplate() {
     setTitle("From Palmovka to Pixel Squares");
@@ -158,99 +237,151 @@ function PostEditor({ post, onSave, onCancel }) {
     setSaving(false);
   }
 
+  const wordCount = body.trim().split(/\s+/).filter(Boolean).length;
+  const readMins = Math.max(1, Math.round(wordCount / 220));
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold uppercase">
-          {isNew ? "New Post" : "Edit Post"}
-        </h2>
-        <button
-          onClick={onCancel}
-          className="text-xs uppercase underline underline-offset-4"
-        >
-          Cancel
-        </button>
+    <div className="flex flex-col" style={{ minHeight: "100vh" }}>
+      {showGuide && <GuidePanel onClose={() => setShowGuide(false)} />}
+
+      <div className="flex items-center justify-between px-0 py-4 border-b border-white/10 mb-6">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onCancel}
+            className="text-xs uppercase opacity-40 hover:opacity-100 transition-opacity"
+          >
+            ← Back
+          </button>
+          <h2 className="text-sm uppercase tracking-[0.1em] opacity-60">
+            {isNew ? "New Post" : "Edit Post"}
+          </h2>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowGuide(!showGuide)}
+            className="text-[11px] uppercase tracking-[0.1em] border border-white/20 px-3 py-1.5 hover:border-white/60 transition-colors"
+          >
+            Writing Guide
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="border border-white px-4 py-1.5 text-xs uppercase font-medium bg-white text-black hover:bg-transparent hover:text-white transition-colors duration-100 disabled:opacity-40"
+          >
+            {saving ? "Saving…" : draft ? "Save Draft" : "Publish"}
+          </button>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-xs uppercase mb-1">Title</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full bg-black text-white border border-white p-3 text-sm focus:outline-none"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs uppercase mb-1">Description</label>
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full bg-black text-white border border-white p-3 text-sm focus:outline-none"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs uppercase mb-1">
-            Tags (comma-separated)
-          </label>
+      <div className="space-y-3 mb-6">
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Post title"
+          className="w-full bg-transparent text-white border-b border-white/20 pb-2 text-2xl font-bold focus:outline-none focus:border-white/60 placeholder:opacity-20 transition-colors"
+        />
+        <input
+          type="text"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="One-sentence description"
+          className="w-full bg-transparent text-white/60 border-b border-white/10 pb-2 text-sm focus:outline-none focus:border-white/40 placeholder:opacity-20 transition-colors"
+        />
+        <div className="flex flex-wrap items-center gap-4 pt-1">
           <input
             type="text"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            placeholder="web, tutorial, astro"
-            className="w-full bg-black text-white border border-white p-3 text-sm focus:outline-none"
+            placeholder="tags: process, vfx, urbanism"
+            className="flex-1 min-w-48 bg-transparent text-white/50 border-b border-white/10 pb-1.5 text-xs focus:outline-none focus:border-white/30 placeholder:opacity-30 transition-colors"
           />
+          <label className="flex items-center gap-2 text-xs cursor-pointer select-none opacity-60 hover:opacity-100">
+            <input
+              type="checkbox"
+              checked={draft}
+              onChange={(e) => setDraft(e.target.checked)}
+              className="accent-white"
+            />
+            Draft
+          </label>
+          <button
+            type="button"
+            onClick={insertSquareTemplate}
+            className="text-[11px] uppercase tracking-[0.08em] opacity-40 hover:opacity-80 underline underline-offset-4"
+          >
+            Square template
+          </button>
         </div>
-
-        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={draft}
-            onChange={(e) => setDraft(e.target.checked)}
-            className="accent-white"
-          />
-          Draft (hidden from public)
-        </label>
-
-        <div>
-          <div className="flex items-center justify-between gap-4 mb-1">
-            <label className="block text-xs uppercase">Content (MDX)</label>
-            <button
-              type="button"
-              onClick={insertSquareTemplate}
-              className="text-[11px] uppercase underline underline-offset-4"
-            >
-              Insert square post template
-            </button>
-          </div>
-          <p className="text-xs opacity-60 mb-2">
-            You can use Markdown and JSX components, e.g. {"<CodePlayground code=\"console.log('hi')\" language=\"javascript\" />"} or {"<SquarePulse title=\"Signal\" />"}
-          </p>
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            spellCheck={false}
-            rows={20}
-            className="w-full bg-black text-white border border-white p-3 text-sm font-mono focus:outline-none resize-y min-h-48"
-          />
-        </div>
-
-        {error && (
-          <p className="text-sm border border-white p-2">{error}</p>
-        )}
-
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="border border-white px-6 py-2 text-sm uppercase font-medium bg-white text-black hover:bg-black hover:text-white transition-colors duration-100 disabled:opacity-40"
-        >
-          {saving ? "Saving..." : isNew ? "Create Post" : "Save Changes"}
-        </button>
       </div>
+
+      <div className="flex items-center gap-3 mb-2">
+        {["write", "preview"].map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => setEditorMode(mode)}
+            className={`text-[11px] uppercase tracking-[0.1em] pb-1 border-b transition-colors ${
+              editorMode === mode ? "border-white opacity-100" : "border-transparent opacity-30 hover:opacity-60"
+            }`}
+          >
+            {mode}
+          </button>
+        ))}
+        <span className="ml-auto text-[11px] opacity-25 tabular-nums">
+          {wordCount} words · {readMins} min read
+        </span>
+      </div>
+
+      {editorMode === "write" ? (
+        <div className="border border-white/15 overflow-hidden" style={{ minHeight: 480 }}>
+          <CodeMirror
+            value={body}
+            onChange={(val) => setBody(val)}
+            extensions={[markdown(), cmTheme]}
+            basicSetup={{
+              lineNumbers: true,
+              foldGutter: false,
+              dropCursor: false,
+              allowMultipleSelections: false,
+              indentOnInput: true,
+              syntaxHighlighting: true,
+              bracketMatching: false,
+              closeBrackets: false,
+              autocompletion: false,
+              rectangularSelection: false,
+              crosshairCursor: false,
+              highlightActiveLine: true,
+              highlightSelectionMatches: false,
+              closeBracketsKeymap: false,
+              searchKeymap: false,
+            }}
+            style={{ minHeight: 480 }}
+          />
+        </div>
+      ) : (
+        <div
+          className="border border-white/15 p-6 prose prose-invert prose-sm max-w-none overflow-y-auto"
+          style={{ minHeight: 480 }}
+          dangerouslySetInnerHTML={{
+            __html: body
+              .replace(/^#{1} (.+)$/gm, "<h1>$1</h1>")
+              .replace(/^#{2} (.+)$/gm, "<h2>$1</h2>")
+              .replace(/^#{3} (.+)$/gm, "<h3>$1</h3>")
+              .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+              .replace(/\*(.+?)\*/g, "<em>$1</em>")
+              .replace(/`(.+?)`/g, "<code>$1</code>")
+              .replace(/^- (.+)$/gm, "<li>$1</li>")
+              .replace(/\n\n/g, "</p><p>")
+              .replace(/^(?!<[hlu]|<li)(.+)$/gm, "<p>$1</p>"),
+          }}
+        />
+      )}
+
+      {error && (
+        <p className="mt-3 text-sm border border-red-400/40 text-red-300 p-2">{error}</p>
+      )}
     </div>
   );
 }
